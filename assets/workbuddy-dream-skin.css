@@ -1,0 +1,228 @@
+/* WorkBuddy Dream Skin runtime stylesheet.
+ * Keep selectors semantic: WorkBuddy 5.2.6 uses both stable BEM classes and
+ * build-hashed CSS Modules. Exact module hashes are intentionally avoided.
+ */
+
+html[data-workbuddy-dream-skin="active"] {
+  --wbds-bg-rgb: 8 11 18;
+  --wbds-panel-rgb: 16 22 32;
+  --wbds-panel-alt-rgb: 24 34 48;
+  --wbds-accent-rgb: 154 216 255;
+  --wbds-text-rgb: 238 247 255;
+  --wbds-muted-rgb: 158 175 191;
+  --wbds-line: rgba(154, 216, 255, 0.24);
+  --wbds-panel-opacity: 0.72;
+  --wbds-task-panel-opacity: 0.92;
+  --wbds-blur: 18px;
+  --wbds-focus-x: 72%;
+  --wbds-focus-y: 46%;
+  --wbds-art-home-opacity: 0.96;
+  --wbds-art-task-opacity: 0.28;
+  --wbds-art-settings-opacity: 0.12;
+  --wbds-current-art-opacity: var(--wbds-art-home-opacity);
+
+  /* WorkBuddy-native token bridge. Most components follow these variables, so
+   * token overrides survive DOM and class-name changes better than deep CSS. */
+  --wb-home-bg-primary: transparent;
+  --wb-home-bg-secondary: transparent;
+  --wb-sidebar-bg: rgb(var(--wbds-panel-rgb) / 0.76);
+  --wb-sidebar-border: var(--wbds-line);
+  --wb-sidebar-mask-end: rgb(var(--wbds-panel-rgb) / 0.96);
+  --wb-bg-primary: rgb(var(--wbds-panel-rgb) / 0.88);
+  --wb-bg-secondary: rgb(var(--wbds-panel-alt-rgb) / 0.86);
+  --wb-bg-tertiary: rgb(var(--wbds-panel-alt-rgb) / 0.68);
+  --wb-color-bg-primary-default: rgb(var(--wbds-panel-rgb) / 0.82);
+  --wb-color-bg-secondary-default: rgb(var(--wbds-panel-alt-rgb) / 0.76);
+  --wb-color-border-primary: var(--wbds-line);
+  --wb-color-border-secondary: rgb(var(--wbds-accent-rgb) / 0.16);
+  --wb-color-text-primary: rgb(var(--wbds-text-rgb));
+  --wb-color-text-secondary: rgb(var(--wbds-muted-rgb));
+  --cb-panel-bg-primary: rgb(var(--wbds-panel-rgb) / 0.86);
+  --cb-sidebar-bg: rgb(var(--wbds-panel-rgb) / 0.76);
+  --cb-text-primary: rgb(var(--wbds-text-rgb));
+  --cb-text-secondary: rgb(var(--wbds-muted-rgb));
+  --vscode-editor-background: rgb(var(--wbds-bg-rgb) / 0.92);
+  --vscode-sideBar-background: rgb(var(--wbds-panel-rgb) / 0.82);
+  --vscode-panel-background: rgb(var(--wbds-panel-rgb) / 0.9);
+  --vscode-input-background: rgb(var(--wbds-panel-alt-rgb) / 0.82);
+}
+
+html[data-workbuddy-dream-skin="active"] {
+  background: rgb(var(--wbds-bg-rgb)) !important;
+}
+
+html[data-workbuddy-dream-skin="active"] body {
+  background: transparent !important;
+  isolation: isolate;
+}
+
+#workbuddy-dream-skin-art {
+  display: none;
+}
+
+html[data-workbuddy-dream-skin="active"] #root,
+html[data-workbuddy-dream-skin="active"] .teams-container,
+html[data-workbuddy-dream-skin="active"] .teams-content-wrapper,
+html[data-workbuddy-dream-skin="active"] .teams-main-content,
+html[data-workbuddy-dream-skin="active"] .main-content,
+html[data-workbuddy-dream-skin="active"] .main-content--welcome,
+html[data-workbuddy-dream-skin="active"] .wb-home-page,
+html[data-workbuddy-dream-skin="active"] .chat-container--welcome {
+  background: transparent !important;
+}
+
+html[data-workbuddy-dream-skin="active"] [class*="_gridViewItem_"],
+html[data-workbuddy-dream-skin="active"] .conversation-list,
+html[data-workbuddy-dream-skin="active"] [class*="_emptyStateContainer_"] {
+  background: transparent !important;
+}
+
+html[data-workbuddy-dream-skin="active"] #root {
+  position: relative;
+  z-index: 1;
+}
+
+html[data-workbuddy-dream-skin="active"] .teams-container {
+  background-color: rgb(var(--wbds-bg-rgb)) !important;
+  background-image:
+    linear-gradient(90deg, rgb(var(--wbds-bg-rgb) / 0.74) 0%, rgb(var(--wbds-bg-rgb) / 0.2) 52%, rgb(var(--wbds-bg-rgb) / 0.08) 100%),
+    linear-gradient(rgb(var(--wbds-bg-rgb) / calc(1 - var(--wbds-current-art-opacity))), rgb(var(--wbds-bg-rgb) / calc(1 - var(--wbds-current-art-opacity)))),
+    var(--wbds-art) !important;
+  background-size: cover !important;
+  background-position: var(--wbds-focus-x) var(--wbds-focus-y) !important;
+  background-repeat: no-repeat !important;
+}
+
+html[data-workbuddy-dream-skin="active"] .conversation-sidebar,
+html[data-workbuddy-dream-skin="active"] .sidebar-next {
+  color: rgb(var(--wbds-text-rgb)) !important;
+  background: rgb(var(--wbds-panel-rgb) / var(--wbds-panel-opacity)) !important;
+  border-color: var(--wbds-line) !important;
+  -webkit-backdrop-filter: blur(var(--wbds-blur)) saturate(1.1);
+  backdrop-filter: blur(var(--wbds-blur)) saturate(1.1);
+}
+
+html[data-workbuddy-dream-skin="active"] .conversation-list,
+html[data-workbuddy-dream-skin="active"] .conversation-list a,
+html[data-workbuddy-dream-skin="active"] .conversation-list button,
+html[data-workbuddy-dream-skin="active"] .conversation-list [class*="_title_"],
+html[data-workbuddy-dream-skin="active"] .conversation-list [class*="_header_"],
+html[data-workbuddy-dream-skin="active"] .conversation-list .conversation-section-label,
+html[data-workbuddy-dream-skin="active"] .conversation-list .conversation-show-more-button {
+  color: rgb(var(--wbds-text-rgb)) !important;
+}
+
+html[data-workbuddy-dream-skin="active"] .conversation-list * {
+  color: rgb(var(--wbds-text-rgb)) !important;
+}
+
+html[data-workbuddy-dream-skin="active"] .conversation-list .conversation-section-label,
+html[data-workbuddy-dream-skin="active"] .conversation-list .conversation-show-more-button,
+html[data-workbuddy-dream-skin="active"] .conversation-list [class*="_date_"],
+html[data-workbuddy-dream-skin="active"] .conversation-list [class*="_subtitle_"] {
+  color: rgb(var(--wbds-muted-rgb)) !important;
+}
+
+html[data-workbuddy-dream-skin="active"] .conversation-list svg,
+html[data-workbuddy-dream-skin="active"] .workbuddy-topbar svg {
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
+html[data-workbuddy-dream-skin="active"] .conversation-list-tab-button.active,
+html[data-workbuddy-dream-skin="active"] .conversation-list-tab-button:hover,
+html[data-workbuddy-dream-skin="active"] .conversation-agent-card:hover,
+html[data-workbuddy-dream-skin="active"] .collapsible-section-header {
+  color: rgb(var(--wbds-text-rgb)) !important;
+  background: rgb(var(--wbds-panel-alt-rgb) / 0.74) !important;
+  border-color: rgb(var(--wbds-accent-rgb) / 0.14) !important;
+}
+
+html[data-workbuddy-dream-skin="active"] .workbuddy-topbar,
+html[data-workbuddy-dream-skin="active"] .sidebar-next-main-header {
+  background: linear-gradient(180deg, rgb(var(--wbds-panel-rgb) / 0.56), rgb(var(--wbds-panel-rgb) / 0.2)) !important;
+  border-color: rgb(var(--wbds-accent-rgb) / 0.12) !important;
+  -webkit-backdrop-filter: blur(calc(var(--wbds-blur) * 0.7));
+  backdrop-filter: blur(calc(var(--wbds-blur) * 0.7));
+}
+
+html[data-workbuddy-dream-skin="active"] .workbuddy-topbar,
+html[data-workbuddy-dream-skin="active"] .workbuddy-topbar * {
+  color: rgb(var(--wbds-text-rgb)) !important;
+}
+
+html[data-workbuddy-dream-skin="active"] .wb-home-header,
+html[data-workbuddy-dream-skin="active"] .logo-workbuddy-title,
+html[data-workbuddy-dream-skin="active"] .workbuddy-topbar-title {
+  color: rgb(var(--wbds-text-rgb)) !important;
+  text-shadow: 0 1px 18px rgb(var(--wbds-bg-rgb) / 0.78);
+}
+
+html[data-workbuddy-dream-skin="active"] .wb-home-composer,
+html[data-workbuddy-dream-skin="active"] [class*="_input-area-container_"] {
+  background: rgb(var(--wbds-panel-rgb) / 0.82) !important;
+  border-color: rgb(var(--wbds-accent-rgb) / 0.28) !important;
+  box-shadow: 0 18px 56px rgb(var(--wbds-bg-rgb) / 0.42), inset 0 1px 0 rgb(255 255 255 / 0.04) !important;
+  -webkit-backdrop-filter: blur(var(--wbds-blur)) saturate(1.12);
+  backdrop-filter: blur(var(--wbds-blur)) saturate(1.12);
+}
+
+html[data-workbuddy-dream-skin="active"] [role="dialog"],
+html[data-workbuddy-dream-skin="active"] [role="menu"],
+html[data-workbuddy-dream-skin="active"] .wb-popover,
+html[data-workbuddy-dream-skin="active"] .wb-dropdown {
+  background: rgb(var(--wbds-panel-rgb) / 0.96) !important;
+  border-color: var(--wbds-line) !important;
+  box-shadow: 0 24px 80px rgb(var(--wbds-bg-rgb) / 0.58) !important;
+  -webkit-backdrop-filter: blur(var(--wbds-blur));
+  backdrop-filter: blur(var(--wbds-blur));
+}
+
+html[data-wbds-route="task"] {
+  --wbds-current-art-opacity: var(--wbds-art-task-opacity);
+}
+
+html[data-wbds-route="task"] .teams-main-content,
+html[data-wbds-route="task"] .main-content,
+html[data-wbds-route="task"] .chat-container,
+html[data-wbds-route="task"] .detail-layout,
+html[data-wbds-route="task"] .detail-panel,
+html[data-wbds-route="task"] [data-view-id="detail-panel"] {
+  background: rgb(var(--wbds-bg-rgb) / var(--wbds-task-panel-opacity)) !important;
+}
+
+html[data-wbds-route="settings"] {
+  --wbds-current-art-opacity: var(--wbds-art-settings-opacity);
+}
+
+html[data-wbds-route="settings"] .teams-main-content,
+html[data-wbds-route="settings"] .main-content,
+html[data-wbds-route="settings"] [class*="settings"] {
+  background: rgb(var(--wbds-bg-rgb) / 0.96) !important;
+}
+
+html[data-workbuddy-dream-skin="active"] .monaco-editor,
+html[data-workbuddy-dream-skin="active"] .monaco-diff-editor,
+html[data-workbuddy-dream-skin="active"] iframe,
+html[data-workbuddy-dream-skin="active"] webview,
+html[data-workbuddy-dream-skin="active"] canvas {
+  /* Editors and document previews remain intentionally opaque/readable. */
+  color-scheme: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #workbuddy-dream-skin-art {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  #workbuddy-dream-skin-art {
+    display: none !important;
+  }
+
+  html[data-workbuddy-dream-skin="active"] * {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}

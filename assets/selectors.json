@@ -1,0 +1,31 @@
+{
+  "schema": "workbuddy-dream-skin-selectors/1",
+  "verifiedAgainst": {
+    "date": "2026-07-23",
+    "platform": "darwin-arm64",
+    "workbuddyVersion": "5.2.6",
+    "electron": "37.10.3",
+    "chromium": "138.0.7204.251"
+  },
+  "target": {
+    "title": "WorkBuddy",
+    "urlSuffix": "/app.asar/renderer/index.html"
+  },
+  "selectors": [
+    { "key": "root", "selector": "#root", "tier": "L0", "required": true },
+    { "key": "shell", "selector": ".teams-container", "tier": "L1", "required": true },
+    { "key": "sidebar", "selector": ".conversation-sidebar, .sidebar-next", "tier": "L1", "required": true },
+    { "key": "main", "selector": ".teams-main-content, .main-content", "tier": "L1", "required": true },
+    { "key": "home", "selector": ".wb-home-page, .main-content--welcome, .chat-container--welcome", "tier": "L1", "required": true },
+    { "key": "composer", "selector": ".wb-home-composer, [class*='_input-area-container_'], [class*='_inlineInputContainer_']", "tier": "L2", "required": false },
+    { "key": "task", "selector": ".chat-container:not(.chat-container--welcome), .detail-layout", "tier": "L2", "required": false },
+    { "key": "detail", "selector": ".detail-panel, [data-view-id='detail-panel']", "tier": "L2", "required": false },
+    { "key": "topbar", "selector": ".workbuddy-topbar", "tier": "L2", "required": false },
+    { "key": "dialog", "selector": "[role='dialog']", "tier": "L2", "required": false },
+    { "key": "menu", "selector": "[role='menu'], .wb-popover, .wb-dropdown", "tier": "L2", "required": false }
+  ],
+  "themeSignals": {
+    "dark": "html.dark, html.vscode-dark, body.dark, body.vscode-dark, body[data-vscode-theme-name='IDE Night']",
+    "light": "html.light, html.vscode-light, body.light, body.vscode-light, body[data-vscode-theme-name='IDE Light']"
+  }
+}

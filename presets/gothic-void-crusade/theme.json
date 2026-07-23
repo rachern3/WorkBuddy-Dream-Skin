@@ -1,0 +1,28 @@
+{
+  "schema": "workbuddy-dream-skin-theme/1",
+  "id": "gothic-void-crusade",
+  "name": "Gothic Void Crusade",
+  "appearance": "auto",
+  "colors": {
+    "background": "#080b12",
+    "panel": "#101620",
+    "panelAlt": "#182230",
+    "accent": "#9ad8ff",
+    "accentAlt": "#d7b7ff",
+    "text": "#eef7ff",
+    "muted": "#9eafbf",
+    "line": "rgba(154, 216, 255, 0.24)"
+  },
+  "art": {
+    "focusX": 0.72,
+    "focusY": 0.46,
+    "homeOpacity": 0.96,
+    "taskOpacity": 0.28,
+    "settingsOpacity": 0.12
+  },
+  "effects": {
+    "blur": 18,
+    "panelOpacity": 0.72,
+    "taskPanelOpacity": 0.92
+  }
+}
