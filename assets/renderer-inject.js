@@ -34,6 +34,28 @@
   const colors = themeConfig?.colors || {};
   const art = themeConfig?.art || {};
   const effects = themeConfig?.effects || {};
+  const DEFAULT_PALETTES = {
+    light: {
+      background: "#f4f7fb",
+      panel: "#ffffff",
+      panelAlt: "#eaf0f7",
+      accent: "#2563eb",
+      accentAlt: "#7c3aed",
+      text: "#172033",
+      muted: "#627086",
+      line: "rgba(37, 99, 235, 0.20)",
+    },
+    dark: {
+      background: "#080b12",
+      panel: "#101620",
+      panelAlt: "#182230",
+      accent: "#9ad8ff",
+      accentAlt: "#d7b7ff",
+      text: "#eef7ff",
+      muted: "#9eafbf",
+      line: "rgba(154, 216, 255, 0.24)",
+    },
+  };
 
   const detectAppearance = () => {
     if (themeConfig?.appearance === "dark" || themeConfig?.appearance === "light") {
@@ -55,15 +77,33 @@
     return "shell";
   };
 
-  const applyVariables = (root) => {
+  const resolvePalette = (appearance) => {
+    const fallback = DEFAULT_PALETTES[appearance] || DEFAULT_PALETTES.light;
+    const modeColors = colors?.[appearance] && typeof colors[appearance] === "object"
+      ? colors[appearance] : {};
+    const legacy = colors && typeof colors === "object" ? colors : {};
+    const explicitAppearance = themeConfig?.appearance === "light" || themeConfig?.appearance === "dark";
+    const structural = new Set(["background", "panel", "panelAlt", "text", "muted"]);
+    const palette = { ...fallback };
+    for (const name of Object.keys(fallback)) {
+      if (typeof modeColors[name] === "string") palette[name] = modeColors[name];
+      else if (typeof legacy[name] === "string" && (explicitAppearance || appearance === "dark" || !structural.has(name))) {
+        palette[name] = legacy[name];
+      }
+    }
+    return palette;
+  };
+
+  const applyVariables = (root, appearance) => {
+    const palette = resolvePalette(appearance);
     const values = {
-      "--wbds-bg-rgb": parseHex(colors.background, "#080b12"),
-      "--wbds-panel-rgb": parseHex(colors.panel, "#101620"),
-      "--wbds-panel-alt-rgb": parseHex(colors.panelAlt, "#182230"),
-      "--wbds-accent-rgb": parseHex(colors.accent, "#9ad8ff"),
-      "--wbds-text-rgb": parseHex(colors.text, "#eef7ff"),
-      "--wbds-muted-rgb": parseHex(colors.muted, "#9eafbf"),
-      "--wbds-line": String(colors.line || "rgba(154, 216, 255, 0.24)"),
+      "--wbds-bg-rgb": parseHex(palette.background, DEFAULT_PALETTES[appearance].background),
+      "--wbds-panel-rgb": parseHex(palette.panel, DEFAULT_PALETTES[appearance].panel),
+      "--wbds-panel-alt-rgb": parseHex(palette.panelAlt, DEFAULT_PALETTES[appearance].panelAlt),
+      "--wbds-accent-rgb": parseHex(palette.accent, DEFAULT_PALETTES[appearance].accent),
+      "--wbds-text-rgb": parseHex(palette.text, DEFAULT_PALETTES[appearance].text),
+      "--wbds-muted-rgb": parseHex(palette.muted, DEFAULT_PALETTES[appearance].muted),
+      "--wbds-line": String(palette.line),
       "--wbds-panel-opacity": String(clamp(numeric(effects.panelOpacity, 0.72), 0.25, 1)),
       "--wbds-task-panel-opacity": String(clamp(numeric(effects.taskPanelOpacity, 0.92), 0.6, 1)),
       "--wbds-blur": `${clamp(numeric(effects.blur, 18), 0, 40)}px`,
@@ -106,9 +146,10 @@
       metrics.repairs += 1;
     }
 
-    applyVariables(root);
+    const appearance = detectAppearance();
+    applyVariables(root, appearance);
     root.setAttribute("data-workbuddy-dream-skin", "active");
-    root.setAttribute("data-wbds-appearance", detectAppearance());
+    root.setAttribute("data-wbds-appearance", appearance);
     const nextRoute = detectRoute();
     if (root.getAttribute("data-wbds-route") !== nextRoute) metrics.routeChanges += 1;
     root.setAttribute("data-wbds-route", nextRoute);
@@ -160,6 +201,8 @@
     cleanup,
     health: () => ({
       active: document.documentElement?.getAttribute("data-workbuddy-dream-skin") === "active",
+      themeId: themeConfig?.id || null,
+      version,
       route: document.documentElement?.getAttribute("data-wbds-route") || null,
       appearance: document.documentElement?.getAttribute("data-wbds-appearance") || null,
       style: Boolean(document.getElementById(STYLE_ID)),

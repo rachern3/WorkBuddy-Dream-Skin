@@ -1,9 +1,9 @@
 {
   "schema": "workbuddy-dream-skin-selectors/1",
   "verifiedAgainst": {
-    "date": "2026-07-23",
+    "date": "2026-07-24",
     "platform": "darwin-arm64",
-    "workbuddyVersion": "5.2.6",
+    "workbuddyVersion": "5.3.3",
     "electron": "37.10.3",
     "chromium": "138.0.7204.251"
   },

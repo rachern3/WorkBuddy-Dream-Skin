@@ -12,12 +12,12 @@
 
 ## 当前状态
 
-- macOS Apple Silicon：已在 WorkBuddy 5.2.6 / Electron 37.10.3 实机验证
+- macOS Apple Silicon：已在 WorkBuddy 5.3.3 / Electron 37.10.3 实机验证
 - macOS Intel：脚本结构兼容，等待实机回归
 - Windows：主题运行时可复用，启动器与安装器尚未发布
 
-当前是 `0.1.0` 技术预览版，目标是先把“不改官方客户端、可验证、可恢复”的
-macOS 链路做稳，再补菜单栏应用和 Windows 安装包。
+当前是 `0.2.0` 技术预览版，已经补齐双击换图、用户主题保存和跟随系统明暗模式。
+菜单栏应用和 Windows 安装包仍在后续范围内。
 
 ## 安装
 
@@ -50,27 +50,50 @@ Install WorkBuddy Dream Skin.command
 ## 使用
 
 - `Start WorkBuddy Dream Skin.command`：以主题模式启动官方 WorkBuddy
+- `Customize WorkBuddy Dream Skin.command`：选择自己的图片、保存主题并立即应用
 - `Verify WorkBuddy Dream Skin.command`：校验签名、CDP 身份、样式和背景层
 - `Restore WorkBuddy.command`：移除运行时并用普通模式重新打开 WorkBuddy
 
 启动器发现 WorkBuddy 已在普通模式运行时会拒绝强制关闭，避免中断后台任务。
 
-## 自定义主题
+## 更换自己的背景
 
-复制 `presets/gothic-void-crusade`，替换其中的 `background.jpg` 并编辑
-`theme.json`，然后运行：
+安装后双击 `Customize WorkBuddy Dream Skin.command`：
 
-```bash
-./scripts/start-workbuddy-dream-skin-macos.sh --theme /absolute/path/to/theme
+1. 在 macOS 文件选择器中挑选 PNG、JPEG、HEIC、TIFF 或 WebP 图片；
+2. 给主题命名；
+3. 图片会在本机转换并保存，然后立即应用到 WorkBuddy。
+
+原图不会上传。用户主题保存在：
+
+```text
+~/Library/Application Support/WorkBuddyDreamSkin/themes
 ```
 
-背景图必须小于等于 16 MiB。推荐 2560×1440 的纯背景图，不要把带 UI 的截图
-当作背景。任务页与设置页会自动降低壁纸透明度，以保证文档和代码可读。
+当前启用的主题保存在：
+
+```text
+~/Library/Application Support/WorkBuddyDreamSkin/current-theme
+```
+
+更新引擎不会删除这些目录。主题默认使用 `appearance: auto`，跟随 WorkBuddy 的
+浅色/深色外观；当 WorkBuddy 跟随系统时，系统切换后主题也会同步切换。首页突出
+壁纸，任务页与设置页会使用与当前外观匹配的高可读面板。
+
+图片原始大小必须小于等于 50 MiB，处理后的背景小于等于 16 MiB。推荐
+2560×1440 的纯背景图，不要把带 UI 的截图当作背景。
+
+开发者仍可直接运行：
+
+```bash
+./scripts/customize-theme-macos.sh --image /absolute/path/to/image.png --name "我的主题"
+```
 
 ## 安全边界
 
 - CDP 仅允许绑定 `127.0.0.1`
 - 校验官方 Bundle ID、严格代码签名和腾讯 Team ID
+- WorkBuddy 5.3.3 会在签名包内生成一个腾讯文档编辑器日志；仅对此精确路径允许资源封印例外，嵌套代码签名仍须通过
 - 只连接 WorkBuddy 主 Renderer，不注入登录页、网页预览或 WebView
 - Restore 只停止本项目创建并记录的 launchd 作业
 - CDP 对同一系统用户下的其他本机进程没有认证；主题运行时不要执行不可信程序

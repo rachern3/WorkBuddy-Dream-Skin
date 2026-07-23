@@ -8,6 +8,8 @@ WBDS_STATE_ROOT="${HOME}/Library/Application Support/WorkBuddyDreamSkin"
 WBDS_SESSION_STATE="$WBDS_STATE_ROOT/session.json"
 WBDS_INJECTOR_STATE="$WBDS_STATE_ROOT/injector.json"
 WBDS_INSTALL_ROOT="${HOME}/.workbuddy-dream-skin/studio"
+WBDS_USER_THEMES_ROOT="$WBDS_STATE_ROOT/themes"
+WBDS_ACTIVE_THEME_DIR="$WBDS_STATE_ROOT/current-theme"
 WBDS_APP_LABEL="com.rachern3.workbuddy-dream-skin.app"
 WBDS_INJECTOR_LABEL="com.rachern3.workbuddy-dream-skin.injector"
 WBDS_EXPECTED_BUNDLE_ID="com.workbuddy.workbuddy"
@@ -54,8 +56,22 @@ wbds_discover_app() {
 
 wbds_verify_app() {
   wbds_discover_app
-  /usr/bin/codesign --verify --deep --strict "$WBDS_APP" >/dev/null 2>&1 ||
-    wbds_die "WorkBuddy 代码签名校验失败：$WBDS_APP"
+  local verify_output allowed_log runtime_arch
+  if ! verify_output="$(/usr/bin/codesign --verify --deep --strict --verbose=1 "$WBDS_APP" 2>&1)"; then
+    # WorkBuddy 5.3.3's bundled Tencent Docs editor creates this log inside
+    # app.asar.unpacked at runtime. It is an added data file, not executable
+    # code, but it invalidates the outer resource seal. Accept only this exact
+    # known path, then still verify every nested code signature while ignoring
+    # resources. Any other added/changed/missing resource remains a hard fail.
+    runtime_arch="$(/usr/bin/uname -m)"
+    [[ "$runtime_arch" == "x86_64" ]] && runtime_arch="x64"
+    allowed_log="$WBDS_APP/Contents/Resources/app.asar.unpacked/node_modules/@tencent/tencent-docs-ai-engine/bin/darwin-${runtime_arch}/editor_sdk.log"
+    if [[ "$verify_output" != "$WBDS_APP: a sealed resource is missing or invalid"$'\n'"file added: $allowed_log" ]] ||
+      [[ ! -f "$allowed_log" || -L "$allowed_log" ]] ||
+      ! /usr/bin/codesign --verify --deep --strict --ignore-resources "$WBDS_APP" >/dev/null 2>&1; then
+      wbds_die "WorkBuddy 代码签名校验失败：$WBDS_APP"
+    fi
+  fi
   local details team
   details="$(/usr/bin/codesign -dv --verbose=4 "$WBDS_APP" 2>&1)"
   team="$(printf '%s\n' "$details" | /usr/bin/sed -n 's/^TeamIdentifier=//p' | /usr/bin/head -n 1)"
@@ -134,4 +150,19 @@ wbds_write_session_state() {
     fs.writeFileSync(temp, JSON.stringify(value, null, 2) + "\n", { mode: 0o600 });
     fs.renameSync(temp, file);
   ' "$WBDS_SESSION_STATE" "$port" "$app_pid" "$WBDS_APP" "$WBDS_EXECUTABLE" "$theme_dir" "$WBDS_APP_LABEL" "$WBDS_INJECTOR_LABEL"
+}
+
+wbds_update_session_theme() {
+  local theme_dir="$1"
+  [[ -f "$WBDS_SESSION_STATE" ]] || return 1
+  wbds_node -e '
+    const fs = require("fs");
+    const [file, themeDir] = process.argv.slice(1);
+    const value = JSON.parse(fs.readFileSync(file, "utf8"));
+    value.themeDir = themeDir;
+    value.themeUpdatedAt = new Date().toISOString();
+    const temp = file + ".tmp-" + process.pid;
+    fs.writeFileSync(temp, JSON.stringify(value, null, 2) + "\n", { mode: 0o600 });
+    fs.renameSync(temp, file);
+  ' "$WBDS_SESSION_STATE" "$theme_dir"
 }

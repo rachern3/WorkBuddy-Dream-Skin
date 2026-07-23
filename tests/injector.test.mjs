@@ -17,6 +17,7 @@ test("parseArgs validates ports and actions", () => {
   assert.equal(options.port, 9444);
   assert.equal(options.action, "watch");
   assert.equal(options.json, true);
+  assert.equal(parseArgs(["--validate"]).action, "validate");
   assert.throws(() => parseArgs(["--port", "80"]), /Invalid CDP port/);
   assert.throws(() => parseArgs(["--unknown"]), /Unknown argument/);
 });
@@ -48,7 +49,11 @@ test("theme payload is complete, deterministic, and syntactically valid", async 
   assert.equal(first.revision, second.revision);
   assert.equal(first.version, second.version);
   assert.equal(first.theme.id, "gothic-void-crusade");
+  assert.equal(first.theme.appearance, "auto");
   assert.ok(first.source.length > 10_000);
+  assert.match(first.source, /prefers-color-scheme: dark/);
+  assert.match(first.source, /DEFAULT_PALETTES/);
+  assert.match(first.source, /data-wbds-appearance/);
   assert.doesNotMatch(first.source, /__WBDS_[A-Z_]+__/);
   assert.doesNotThrow(() => new Function(first.source));
 });

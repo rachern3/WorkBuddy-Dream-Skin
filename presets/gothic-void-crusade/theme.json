@@ -4,14 +4,26 @@
   "name": "Gothic Void Crusade",
   "appearance": "auto",
   "colors": {
-    "background": "#080b12",
-    "panel": "#101620",
-    "panelAlt": "#182230",
-    "accent": "#9ad8ff",
-    "accentAlt": "#d7b7ff",
-    "text": "#eef7ff",
-    "muted": "#9eafbf",
-    "line": "rgba(154, 216, 255, 0.24)"
+    "light": {
+      "background": "#f4f7fb",
+      "panel": "#ffffff",
+      "panelAlt": "#eaf0f7",
+      "accent": "#2563eb",
+      "accentAlt": "#7c3aed",
+      "text": "#172033",
+      "muted": "#627086",
+      "line": "rgba(37, 99, 235, 0.20)"
+    },
+    "dark": {
+      "background": "#080b12",
+      "panel": "#101620",
+      "panelAlt": "#182230",
+      "accent": "#9ad8ff",
+      "accentAlt": "#d7b7ff",
+      "text": "#eef7ff",
+      "muted": "#9eafbf",
+      "line": "rgba(154, 216, 255, 0.24)"
+    }
   },
   "art": {
     "focusX": 0.72,

@@ -4,6 +4,7 @@
  */
 
 html[data-workbuddy-dream-skin="active"] {
+  color-scheme: dark;
   --wbds-bg-rgb: 8 11 18;
   --wbds-panel-rgb: 16 22 32;
   --wbds-panel-alt-rgb: 24 34 48;
@@ -45,6 +46,14 @@ html[data-workbuddy-dream-skin="active"] {
   --vscode-sideBar-background: rgb(var(--wbds-panel-rgb) / 0.82);
   --vscode-panel-background: rgb(var(--wbds-panel-rgb) / 0.9);
   --vscode-input-background: rgb(var(--wbds-panel-alt-rgb) / 0.82);
+}
+
+html[data-workbuddy-dream-skin="active"][data-wbds-appearance="light"] {
+  color-scheme: light;
+}
+
+html[data-workbuddy-dream-skin="active"][data-wbds-appearance="dark"] {
+  color-scheme: dark;
 }
 
 html[data-workbuddy-dream-skin="active"] {
@@ -189,6 +198,7 @@ html[data-wbds-route="task"] .detail-layout,
 html[data-wbds-route="task"] .detail-panel,
 html[data-wbds-route="task"] [data-view-id="detail-panel"] {
   background: rgb(var(--wbds-bg-rgb) / var(--wbds-task-panel-opacity)) !important;
+  color: rgb(var(--wbds-text-rgb));
 }
 
 html[data-wbds-route="settings"] {

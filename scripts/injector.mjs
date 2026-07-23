@@ -44,6 +44,7 @@ export function parseArgs(argv) {
     else if (arg === "--cleanup") options.action = "cleanup";
     else if (arg === "--status") options.action = "status";
     else if (arg === "--probe") options.action = "probe";
+    else if (arg === "--validate") options.action = "validate";
     else if (arg === "--json") options.json = true;
     else if (arg === "--help" || arg === "-h") options.action = "help";
     else throw new Error(`Unknown argument: ${arg}`);
@@ -331,13 +332,19 @@ Usage:
   injector.mjs --port 9432 --once [--theme DIR]
   injector.mjs --port 9432 --status --json
   injector.mjs --port 9432 --cleanup
-  injector.mjs --port 9432 --probe --json`;
+  injector.mjs --port 9432 --probe --json
+  injector.mjs --validate [--theme DIR]`;
 }
 
 async function run(options) {
   const selectors = JSON.parse(await fs.readFile(options.selectorsPath, "utf8"));
   if (options.action === "help") {
     console.log(help());
+    return;
+  }
+  if (options.action === "validate") {
+    const payload = await buildPayload(options);
+    console.log(JSON.stringify({ ok: true, themeId: payload.theme.id, version: payload.version }));
     return;
   }
   const browser = await getBrowserIdentity(options.port);

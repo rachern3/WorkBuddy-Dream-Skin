@@ -4,7 +4,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/common-macos.sh"
 
-THEME_DIR="$WBDS_ROOT/presets/gothic-void-crusade"
+if [[ -f "$WBDS_ACTIVE_THEME_DIR/theme.json" ]]; then
+  THEME_DIR="$WBDS_ACTIVE_THEME_DIR"
+else
+  THEME_DIR="$WBDS_ROOT/presets/gothic-void-crusade"
+fi
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --theme)

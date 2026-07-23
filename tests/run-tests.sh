@@ -6,6 +6,7 @@ cd "$ROOT"
 
 /bin/bash -n scripts/*.sh ./*.command
 node --check scripts/injector.mjs
+node --check scripts/write-theme.mjs
 node --check assets/renderer-inject.js
 node --test tests/*.test.mjs
 node -e '
