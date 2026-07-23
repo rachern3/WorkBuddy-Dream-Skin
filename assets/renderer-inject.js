@@ -6,7 +6,8 @@
   const ROOT_VARS = [
     "--wbds-bg-rgb", "--wbds-panel-rgb", "--wbds-panel-alt-rgb",
     "--wbds-accent-rgb", "--wbds-text-rgb", "--wbds-muted-rgb", "--wbds-line",
-    "--wbds-panel-opacity", "--wbds-task-panel-opacity", "--wbds-blur",
+    "--wbds-panel-opacity", "--wbds-task-panel-opacity", "--wbds-settings-panel-opacity", "--wbds-composer-opacity",
+    "--wbds-left-scrim-start", "--wbds-left-scrim-mid", "--wbds-left-scrim-end", "--wbds-blur",
     "--wbds-focus-x", "--wbds-focus-y", "--wbds-art-home-opacity",
     "--wbds-art-task-opacity", "--wbds-art-settings-opacity", "--wbds-art",
   ];
@@ -96,6 +97,20 @@
 
   const applyVariables = (root, appearance) => {
     const palette = resolvePalette(appearance);
+    const configuredPanelOpacity = clamp(numeric(effects.panelOpacity, 0.72), 0.25, 1);
+    const configuredTaskOpacity = clamp(numeric(effects.taskPanelOpacity, 0.92), 0.35, 1);
+    const modePrefix = appearance === "dark" ? "dark" : "light";
+    const modeValue = (suffix, fallback) => numeric(effects[`${modePrefix}${suffix}`], fallback);
+    const panelOpacity = clamp(modeValue("PanelOpacity",
+      Math.min(configuredPanelOpacity, appearance === "dark" ? 0.6 : 0.48)), 0.25, 0.9);
+    const taskPanelOpacity = clamp(modeValue("TaskPanelOpacity",
+      Math.min(configuredTaskOpacity, appearance === "dark" ? 0.64 : 0.56)), 0.35, 0.9);
+    const settingsPanelOpacity = clamp(modeValue("SettingsPanelOpacity", appearance === "dark" ? 0.78 : 0.72), 0.5, 0.92);
+    const composerOpacity = clamp(modeValue("ComposerOpacity", appearance === "dark" ? 0.58 : 0.46), 0.3, 0.9);
+    const blur = clamp(Math.min(numeric(effects.blur, 18), appearance === "dark" ? 16 : 14), 0, 40);
+    const scrimStart = clamp(modeValue("LeftScrimStart", appearance === "dark" ? 0.56 : 0.32), 0, 0.85);
+    const scrimMid = clamp(modeValue("LeftScrimMid", appearance === "dark" ? 0.18 : 0.1), 0, 0.5);
+    const scrimEnd = clamp(modeValue("LeftScrimEnd", appearance === "dark" ? 0.05 : 0.03), 0, 0.25);
     const values = {
       "--wbds-bg-rgb": parseHex(palette.background, DEFAULT_PALETTES[appearance].background),
       "--wbds-panel-rgb": parseHex(palette.panel, DEFAULT_PALETTES[appearance].panel),
@@ -104,14 +119,19 @@
       "--wbds-text-rgb": parseHex(palette.text, DEFAULT_PALETTES[appearance].text),
       "--wbds-muted-rgb": parseHex(palette.muted, DEFAULT_PALETTES[appearance].muted),
       "--wbds-line": String(palette.line),
-      "--wbds-panel-opacity": String(clamp(numeric(effects.panelOpacity, 0.72), 0.25, 1)),
-      "--wbds-task-panel-opacity": String(clamp(numeric(effects.taskPanelOpacity, 0.92), 0.6, 1)),
-      "--wbds-blur": `${clamp(numeric(effects.blur, 18), 0, 40)}px`,
+      "--wbds-panel-opacity": String(panelOpacity),
+      "--wbds-task-panel-opacity": String(taskPanelOpacity),
+      "--wbds-settings-panel-opacity": String(settingsPanelOpacity),
+      "--wbds-composer-opacity": String(composerOpacity),
+      "--wbds-left-scrim-start": String(scrimStart),
+      "--wbds-left-scrim-mid": String(scrimMid),
+      "--wbds-left-scrim-end": String(scrimEnd),
+      "--wbds-blur": `${blur}px`,
       "--wbds-focus-x": `${clamp(numeric(art.focusX, 0.72), 0, 1) * 100}%`,
       "--wbds-focus-y": `${clamp(numeric(art.focusY, 0.46), 0, 1) * 100}%`,
       "--wbds-art-home-opacity": String(clamp(numeric(art.homeOpacity, 0.96), 0, 1)),
-      "--wbds-art-task-opacity": String(clamp(numeric(art.taskOpacity, 0.28), 0, 1)),
-      "--wbds-art-settings-opacity": String(clamp(numeric(art.settingsOpacity, 0.12), 0, 1)),
+      "--wbds-art-task-opacity": String(clamp(numeric(art.taskOpacity, 0.48), 0.48, 0.75)),
+      "--wbds-art-settings-opacity": String(clamp(numeric(art.settingsOpacity, 0.28), 0.28, 0.6)),
       "--wbds-art": artUrl ? `url(${JSON.stringify(artUrl)})` : "none",
     };
     for (const [name, value] of Object.entries(values)) root.style.setProperty(name, value);

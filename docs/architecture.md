@@ -39,6 +39,12 @@ and OS media-query changes schedule a new palette application. Light and dark
 palettes have separate structural colors; wallpaper luminance never flips the
 user's chosen UI appearance.
 
+The wallpaper is painted once on the full-window `.teams-container`. Sidebar
+and composer surfaces are translucent children above that same image. Task
+routes apply exactly one readable glass layer on `.teams-main-content`; nested
+main, chat, and detail containers stay transparent so their alpha values do not
+multiply and accidentally hide the artwork.
+
 ## Trust boundaries
 
 - The application must have bundle ID `com.workbuddy.workbuddy`, verified nested

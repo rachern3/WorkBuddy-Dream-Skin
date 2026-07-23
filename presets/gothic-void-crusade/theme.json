@@ -29,12 +29,20 @@
     "focusX": 0.72,
     "focusY": 0.46,
     "homeOpacity": 0.96,
-    "taskOpacity": 0.28,
-    "settingsOpacity": 0.12
+    "taskOpacity": 0.48,
+    "settingsOpacity": 0.28
   },
   "effects": {
     "blur": 18,
-    "panelOpacity": 0.72,
-    "taskPanelOpacity": 0.92
+    "panelOpacity": 0.6,
+    "taskPanelOpacity": 0.64,
+    "lightPanelOpacity": 0.48,
+    "darkPanelOpacity": 0.6,
+    "lightTaskPanelOpacity": 0.56,
+    "darkTaskPanelOpacity": 0.64,
+    "lightSettingsPanelOpacity": 0.72,
+    "darkSettingsPanelOpacity": 0.78,
+    "lightComposerOpacity": 0.46,
+    "darkComposerOpacity": 0.58
   }
 }

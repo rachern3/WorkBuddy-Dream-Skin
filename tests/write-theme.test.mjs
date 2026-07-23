@@ -31,7 +31,9 @@ test("custom themes default to following the native/system appearance", async (t
   assert.equal(theme.name, "测试主题");
   assert.equal(theme.appearance, "auto");
   assert.equal(theme.image, "background.jpg");
-  assert.equal(theme.effects.taskPanelOpacity, 0.94);
+  assert.equal(theme.art.taskOpacity, 0.48);
+  assert.equal(theme.effects.taskPanelOpacity, 0.64);
+  assert.equal(theme.effects.lightPanelOpacity, 0.48);
 });
 
 test("custom theme writer rejects unsupported appearance values", async (t) => {
