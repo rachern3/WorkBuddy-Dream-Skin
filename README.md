@@ -47,6 +47,13 @@ Install WorkBuddy Dream Skin.command
 
 它不会把主题文件写进 WorkBuddy 的用户配置目录。
 
+安装完成后，桌面会出现四个入口：
+
+- `WorkBuddy Dream Skin.command`
+- `WorkBuddy Dream Skin - Customize.command`
+- `WorkBuddy Dream Skin - Verify.command`
+- `WorkBuddy Dream Skin - Restore.command`
+
 ## 使用
 
 - `Start WorkBuddy Dream Skin.command`：以主题模式启动官方 WorkBuddy
@@ -58,7 +65,7 @@ Install WorkBuddy Dream Skin.command
 
 ## 更换自己的背景
 
-安装后双击 `Customize WorkBuddy Dream Skin.command`：
+安装后双击桌面的 `WorkBuddy Dream Skin - Customize.command`：
 
 1. 在 macOS 文件选择器中挑选 PNG、JPEG、HEIC、TIFF 或 WebP 图片；
 2. 给主题命名；

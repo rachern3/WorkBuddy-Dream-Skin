@@ -16,4 +16,6 @@ node -e '
   }
 '
 
+grep -q 'WorkBuddyDreamSkin launcher' scripts/install-workbuddy-dream-skin-macos.sh
+
 echo "All WorkBuddy Dream Skin checks passed."
