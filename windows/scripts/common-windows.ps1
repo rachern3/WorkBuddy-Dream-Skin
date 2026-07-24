@@ -273,17 +273,26 @@ function Stop-WbdsApp {
     try { [void](Get-Process -Id ([int]$entry.ProcessId) -ErrorAction Stop).CloseMainWindow() } catch {}
   }
   $deadline = (Get-Date).AddSeconds(15)
-  while ((Get-WbdsAppProcesses -Install $Install).Count -gt 0 -and (Get-Date) -lt $deadline) {
+  while (@(Get-WbdsAppProcesses -Install $Install).Count -gt 0 -and (Get-Date) -lt $deadline) {
     Start-Sleep -Milliseconds 250
   }
   $remaining = @(Get-WbdsAppProcesses -Install $Install)
   if ($remaining.Count -eq 0) { return }
   if (-not $AllowForce) { throw 'WorkBuddy did not close. Close it manually and retry.' }
-  foreach ($entry in $remaining) {
-    $current = Get-CimInstance Win32_Process -Filter "ProcessId = $([int]$entry.ProcessId)" -ErrorAction SilentlyContinue
-    if ($current -and (Test-WbdsPathEqual -Left (Get-WbdsProcessExecutablePath $current) -Right $Install.Executable)) {
-      Stop-Process -Id ([int]$entry.ProcessId) -Force -ErrorAction Stop
+  $deadline = (Get-Date).AddSeconds(10)
+  do {
+    $remaining = @(Get-WbdsAppProcesses -Install $Install)
+    foreach ($entry in $remaining) {
+      $current = Get-CimInstance Win32_Process -Filter "ProcessId = $([int]$entry.ProcessId)" -ErrorAction SilentlyContinue
+      if ($current -and (Test-WbdsPathEqual -Left (Get-WbdsProcessExecutablePath $current) -Right $Install.Executable)) {
+        Stop-Process -Id ([int]$entry.ProcessId) -Force -ErrorAction SilentlyContinue
+      }
     }
+    if ($remaining.Count -eq 0) { return }
+    Start-Sleep -Milliseconds 250
+  } while ((Get-Date) -lt $deadline)
+  if (@(Get-WbdsAppProcesses -Install $Install).Count -gt 0) {
+    throw 'Verified WorkBuddy processes remained after the authorized restart attempt.'
   }
 }
 
@@ -299,7 +308,7 @@ function Get-WbdsPortListeners {
 
 function Test-WbdsPortAvailable {
   param([int]$Port)
-  return (Get-WbdsPortListeners -Port $Port).Count -eq 0
+  return @(Get-WbdsPortListeners -Port $Port).Count -eq 0
 }
 
 function Select-WbdsPort {

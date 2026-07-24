@@ -28,7 +28,7 @@ try {
 
   function Add-WbdsTrayItem {
     param(
-      [Parameter(Mandatory = $true)][System.Windows.Forms.ToolStripItemCollection]$Items,
+      [Parameter(Mandatory = $true)][AllowEmptyCollection()][System.Windows.Forms.ToolStripItemCollection]$Items,
       [Parameter(Mandatory = $true)][string]$Text,
       [Parameter(Mandatory = $true)][scriptblock]$Action,
       [switch]$Checked

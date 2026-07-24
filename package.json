@@ -1,6 +1,6 @@
 {
   "name": "workbuddy-dream-skin",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "description": "External theme and wallpaper engine for the official WorkBuddy desktop app",
   "type": "module",

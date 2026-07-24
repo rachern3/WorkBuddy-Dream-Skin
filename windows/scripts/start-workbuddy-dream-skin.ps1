@@ -62,7 +62,10 @@ try {
       if (-not $authorized) {
         throw 'WorkBuddy is already open without a verified skin session. Close it or use -RestartExisting.'
       }
-      Stop-WbdsApp -Install $install
+      # RestartExisting or the confirmation dialog explicitly authorizes a
+      # restart. Electron can keep background processes alive after WM_CLOSE,
+      # so allow the verified fallback termination path in that case.
+      Stop-WbdsApp -Install $install -AllowForce
     }
     if (-not (Test-WbdsPortAvailable -Port $Port)) {
       if ($PSBoundParameters.ContainsKey('Port')) { throw "Port $Port is occupied by an unverified process." }
@@ -77,7 +80,7 @@ try {
       Start-Sleep -Milliseconds 350
       $identity = Get-WbdsCdpIdentity -Port $Port -Install $install
       if ($null -ne $identity) { break }
-      if ($app.HasExited -and (Get-WbdsAppProcesses -Install $install).Count -eq 0) {
+      if ($app.HasExited -and @(Get-WbdsAppProcesses -Install $install).Count -eq 0) {
         throw 'WorkBuddy exited before opening its loopback debugging port.'
       }
     } while ((Get-Date) -lt $deadline)

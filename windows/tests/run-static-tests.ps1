@@ -26,6 +26,19 @@ foreach ($file in $powerShellFiles) {
   }
 }
 
+$startText = [System.IO.File]::ReadAllText((Join-Path $root 'windows\scripts\start-workbuddy-dream-skin.ps1'))
+$commonText = [System.IO.File]::ReadAllText((Join-Path $root 'windows\scripts\common-windows.ps1'))
+$trayText = [System.IO.File]::ReadAllText((Join-Path $root 'windows\scripts\tray-workbuddy-dream-skin.ps1'))
+if (($startText + $commonText) -match '(?<!@)\(Get-Wbds(?:AppProcesses|PortListeners)[^\r\n]*\)\.Count') {
+  throw 'Collection-producing process helpers must be wrapped with @() before Count on Windows PowerShell 5.1.'
+}
+if ($trayText -notmatch '\[AllowEmptyCollection\(\)\]\[System\.Windows\.Forms\.ToolStripItemCollection\]\$Items') {
+  throw 'Tray item binding must accept an initially empty submenu collection.'
+}
+if ($startText -notmatch 'Stop-WbdsApp\s+-Install\s+\$install\s+-AllowForce') {
+  throw 'An authorized WorkBuddy restart must allow the verified force-close fallback.'
+}
+
 . (Join-Path $root 'windows\scripts\common-windows.ps1')
 if (-not (Test-WbdsPathEqual -Left 'C:\Temp\One' -Right 'c:\temp\one\')) { throw 'Path equality regression.' }
 if (-not (Test-WbdsPathWithin -Path 'C:\Temp\One\file.txt' -Root 'c:\temp\one')) { throw 'Path containment regression.' }
