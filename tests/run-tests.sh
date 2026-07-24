@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-/bin/bash -n scripts/*.sh ./*.command
+/bin/bash -n scripts/*.sh macos/scripts/*.sh ./*.command
 node --check scripts/injector.mjs
 node --check scripts/write-theme.mjs
 node --check assets/renderer-inject.js
@@ -17,5 +17,11 @@ node -e '
 '
 
 grep -q 'WorkBuddyDreamSkin launcher' scripts/install-workbuddy-dream-skin-macos.sh
+grep -q '选择新背景图片' macos/menubar-app/Sources/WorkBuddyDreamSkinMenuBar/AppDelegate.swift
+grep -q '恢复 WorkBuddy 官方外观' macos/menubar-app/Sources/WorkBuddyDreamSkinMenuBar/AppDelegate.swift
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  /bin/bash macos/scripts/build-menubar-app.sh
+fi
 
 echo "All WorkBuddy Dream Skin checks passed."

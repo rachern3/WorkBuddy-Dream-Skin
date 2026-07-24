@@ -6,9 +6,9 @@
   const ROOT_VARS = [
     "--wbds-bg-rgb", "--wbds-panel-rgb", "--wbds-panel-alt-rgb",
     "--wbds-accent-rgb", "--wbds-text-rgb", "--wbds-muted-rgb", "--wbds-line",
-    "--wbds-panel-opacity", "--wbds-task-panel-opacity", "--wbds-settings-panel-opacity", "--wbds-composer-opacity",
+    "--wbds-panel-opacity", "--wbds-page-panel-opacity", "--wbds-task-panel-opacity", "--wbds-settings-panel-opacity", "--wbds-composer-opacity",
     "--wbds-left-scrim-start", "--wbds-left-scrim-mid", "--wbds-left-scrim-end", "--wbds-blur",
-    "--wbds-focus-x", "--wbds-focus-y", "--wbds-art-home-opacity",
+    "--wbds-focus-x", "--wbds-focus-y", "--wbds-art-home-opacity", "--wbds-art-page-opacity",
     "--wbds-art-task-opacity", "--wbds-art-settings-opacity", "--wbds-art",
   ];
 
@@ -72,9 +72,25 @@
   };
 
   const detectRoute = () => {
-    if (document.querySelector(".wb-home-page, .main-content--welcome, .chat-container--welcome")) return "home";
-    if (document.querySelector("[class*='settings'], [data-view-id*='settings']")) return "settings";
-    if (document.querySelector(".chat-container:not(.chat-container--welcome), .detail-layout, .detail-panel")) return "task";
+    const visible = (selector) => {
+      try {
+        return [...document.querySelectorAll(selector)].some((element) => {
+          const rect = element.getBoundingClientRect();
+          const style = getComputedStyle(element);
+          return rect.width > 320 && rect.height > 200 && style.display !== "none" && style.visibility !== "hidden";
+        });
+      } catch {
+        return false;
+      }
+    };
+    if (visible(".claw-workspace")) return "assistant";
+    if (visible(".workbuddy-collab, .landing")) return "projects";
+    if (visible(".expert-center-page")) return "experts";
+    if (visible(".automation-main-page")) return "automation";
+    if (visible(".my-files-panel, .tencent-docs-panel")) return "resources";
+    if (visible("[class*='settings'], [data-view-id*='settings']")) return "settings";
+    if (visible(".chat-container:not(.chat-container--welcome), .detail-layout, .detail-panel")) return "task";
+    if (visible(".wb-home-page, .main-content--welcome, .chat-container--welcome")) return "home";
     return "shell";
   };
 
@@ -101,16 +117,17 @@
     const configuredTaskOpacity = clamp(numeric(effects.taskPanelOpacity, 0.92), 0.35, 1);
     const modePrefix = appearance === "dark" ? "dark" : "light";
     const modeValue = (suffix, fallback) => numeric(effects[`${modePrefix}${suffix}`], fallback);
-    const panelOpacity = clamp(modeValue("PanelOpacity",
-      Math.min(configuredPanelOpacity, appearance === "dark" ? 0.6 : 0.48)), 0.25, 0.9);
-    const taskPanelOpacity = clamp(modeValue("TaskPanelOpacity",
-      Math.min(configuredTaskOpacity, appearance === "dark" ? 0.64 : 0.56)), 0.35, 0.9);
+    const panelOpacity = clamp(Math.min(modeValue("PanelOpacity",
+      Math.min(configuredPanelOpacity, appearance === "dark" ? 0.54 : 0.4)), appearance === "dark" ? 0.54 : 0.4), 0.25, 0.9);
+    const pagePanelOpacity = clamp(modeValue("PagePanelOpacity", appearance === "dark" ? 0.46 : 0.34), 0.22, 0.82);
+    const taskPanelOpacity = clamp(Math.min(modeValue("TaskPanelOpacity",
+      Math.min(configuredTaskOpacity, appearance === "dark" ? 0.52 : 0.44)), appearance === "dark" ? 0.52 : 0.44), 0.32, 0.9);
     const settingsPanelOpacity = clamp(modeValue("SettingsPanelOpacity", appearance === "dark" ? 0.78 : 0.72), 0.5, 0.92);
-    const composerOpacity = clamp(modeValue("ComposerOpacity", appearance === "dark" ? 0.58 : 0.46), 0.3, 0.9);
-    const blur = clamp(Math.min(numeric(effects.blur, 18), appearance === "dark" ? 16 : 14), 0, 40);
-    const scrimStart = clamp(modeValue("LeftScrimStart", appearance === "dark" ? 0.56 : 0.32), 0, 0.85);
-    const scrimMid = clamp(modeValue("LeftScrimMid", appearance === "dark" ? 0.18 : 0.1), 0, 0.5);
-    const scrimEnd = clamp(modeValue("LeftScrimEnd", appearance === "dark" ? 0.05 : 0.03), 0, 0.25);
+    const composerOpacity = clamp(Math.min(modeValue("ComposerOpacity", appearance === "dark" ? 0.52 : 0.4), appearance === "dark" ? 0.52 : 0.4), 0.3, 0.9);
+    const blur = clamp(Math.min(numeric(effects.blur, 14), appearance === "dark" ? 13 : 11), 0, 40);
+    const scrimStart = clamp(modeValue("LeftScrimStart", appearance === "dark" ? 0.46 : 0.24), 0, 0.85);
+    const scrimMid = clamp(modeValue("LeftScrimMid", appearance === "dark" ? 0.14 : 0.07), 0, 0.5);
+    const scrimEnd = clamp(modeValue("LeftScrimEnd", appearance === "dark" ? 0.04 : 0.02), 0, 0.25);
     const values = {
       "--wbds-bg-rgb": parseHex(palette.background, DEFAULT_PALETTES[appearance].background),
       "--wbds-panel-rgb": parseHex(palette.panel, DEFAULT_PALETTES[appearance].panel),
@@ -120,6 +137,7 @@
       "--wbds-muted-rgb": parseHex(palette.muted, DEFAULT_PALETTES[appearance].muted),
       "--wbds-line": String(palette.line),
       "--wbds-panel-opacity": String(panelOpacity),
+      "--wbds-page-panel-opacity": String(pagePanelOpacity),
       "--wbds-task-panel-opacity": String(taskPanelOpacity),
       "--wbds-settings-panel-opacity": String(settingsPanelOpacity),
       "--wbds-composer-opacity": String(composerOpacity),
@@ -130,7 +148,8 @@
       "--wbds-focus-x": `${clamp(numeric(art.focusX, 0.72), 0, 1) * 100}%`,
       "--wbds-focus-y": `${clamp(numeric(art.focusY, 0.46), 0, 1) * 100}%`,
       "--wbds-art-home-opacity": String(clamp(numeric(art.homeOpacity, 0.96), 0, 1)),
-      "--wbds-art-task-opacity": String(clamp(numeric(art.taskOpacity, 0.48), 0.48, 0.75)),
+      "--wbds-art-page-opacity": String(clamp(numeric(art.pageOpacity, 0.78), 0.58, 0.9)),
+      "--wbds-art-task-opacity": String(clamp(numeric(art.taskOpacity, 0.62), 0.58, 0.82)),
       "--wbds-art-settings-opacity": String(clamp(numeric(art.settingsOpacity, 0.28), 0.28, 0.6)),
       "--wbds-art": artUrl ? `url(${JSON.stringify(artUrl)})` : "none",
     };

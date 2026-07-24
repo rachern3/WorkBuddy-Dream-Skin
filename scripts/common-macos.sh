@@ -56,7 +56,7 @@ wbds_discover_app() {
 
 wbds_verify_app() {
   wbds_discover_app
-  local verify_output allowed_log runtime_arch
+  local verify_output allowed_log pycache_dir runtime_arch line added_path valid_exception exception_count
   if ! verify_output="$(/usr/bin/codesign --verify --deep --strict --verbose=1 "$WBDS_APP" 2>&1)"; then
     # WorkBuddy 5.3.3's bundled Tencent Docs editor creates this log inside
     # app.asar.unpacked at runtime. It is an added data file, not executable
@@ -66,8 +66,25 @@ wbds_verify_app() {
     runtime_arch="$(/usr/bin/uname -m)"
     [[ "$runtime_arch" == "x86_64" ]] && runtime_arch="x64"
     allowed_log="$WBDS_APP/Contents/Resources/app.asar.unpacked/node_modules/@tencent/tencent-docs-ai-engine/bin/darwin-${runtime_arch}/editor_sdk.log"
-    if [[ "$verify_output" != "$WBDS_APP: a sealed resource is missing or invalid"$'\n'"file added: $allowed_log" ]] ||
-      [[ ! -f "$allowed_log" || -L "$allowed_log" ]] ||
+    pycache_dir="$WBDS_APP/Contents/Resources/app.asar.unpacked/cli/vendor/shim/__pycache__"
+    valid_exception=1
+    exception_count=0
+    [[ "${verify_output%%$'\n'*}" == "$WBDS_APP: a sealed resource is missing or invalid" ]] || valid_exception=0
+    while IFS= read -r line; do
+      [[ -n "$line" ]] || continue
+      exception_count=$((exception_count + 1))
+      added_path="${line#file added: }"
+      if [[ "$line" == "file added: $allowed_log" ]]; then
+        [[ -f "$added_path" && ! -L "$added_path" ]] || valid_exception=0
+      elif [[ "$line" == "file added: $pycache_dir/"* ]]; then
+        [[ "$(/usr/bin/dirname "$added_path")" == "$pycache_dir" ]] || valid_exception=0
+        [[ "$(/usr/bin/basename "$added_path")" =~ ^sitecustomize\.cpython-[0-9]+\.pyc$ ]] || valid_exception=0
+        [[ -f "$added_path" && ! -L "$added_path" && ! -x "$added_path" ]] || valid_exception=0
+      else
+        valid_exception=0
+      fi
+    done < <(printf '%s\n' "$verify_output" | /usr/bin/tail -n +2)
+    if (( valid_exception != 1 || exception_count < 1 )) ||
       ! /usr/bin/codesign --verify --deep --strict --ignore-resources "$WBDS_APP" >/dev/null 2>&1; then
       wbds_die "WorkBuddy 代码签名校验失败：$WBDS_APP"
     fi

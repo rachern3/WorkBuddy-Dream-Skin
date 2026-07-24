@@ -55,6 +55,10 @@ test("theme payload is complete, deterministic, and syntactically valid", async 
   assert.match(first.source, /DEFAULT_PALETTES/);
   assert.match(first.source, /data-wbds-appearance/);
   assert.match(first.source, /--wbds-composer-opacity/);
+  assert.match(first.source, /--wbds-page-panel-opacity/);
+  assert.match(first.source, /\.claw-workspace/);
+  assert.match(first.source, /\.expert-center-page/);
+  assert.match(first.source, /\.my-files-panel/);
   assert.match(first.source, /_mainArea_/);
   assert.doesNotMatch(first.source, /__WBDS_[A-Z_]+__/);
   assert.doesNotThrow(() => new Function(first.source));

@@ -5,9 +5,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/common-macos.sh"
 
 CREATE_LAUNCHERS=1
+CREATE_MENUBAR=1
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --no-launchers) CREATE_LAUNCHERS=0; shift ;;
+    --no-menubar) CREATE_MENUBAR=0; shift ;;
     *) wbds_die "未知参数：$1" ;;
   esac
 done
@@ -19,6 +21,7 @@ wbds_ensure_state_root
   --exclude '.git' --exclude 'node_modules' --exclude 'release' --exclude 'work' \
   "$WBDS_ROOT/" "$WBDS_INSTALL_ROOT/"
 /bin/chmod +x "$WBDS_INSTALL_ROOT"/*.command "$WBDS_INSTALL_ROOT"/scripts/*.sh "$WBDS_INSTALL_ROOT"/scripts/*.mjs
+/bin/chmod +x "$WBDS_INSTALL_ROOT"/macos/scripts/*.sh
 
 wbds_shell_quote() {
   wbds_node -e 'process.stdout.write(JSON.stringify(process.argv[1]))' "$1"
@@ -51,4 +54,20 @@ fi
 
 wbds_info "已安装到 $WBDS_INSTALL_ROOT"
 (( CREATE_LAUNCHERS )) && wbds_info "已在桌面创建启动、换图、验证和恢复入口。"
+if (( CREATE_MENUBAR )); then
+  /bin/bash "$WBDS_INSTALL_ROOT/macos/scripts/install-menubar-app-macos.sh"
+fi
+
+if [[ -f "$WBDS_SESSION_STATE" ]]; then
+  ACTIVE_PORT="$(wbds_read_state port || true)"
+  if [[ "$ACTIVE_PORT" =~ ^[0-9]+$ ]] &&
+    /usr/bin/curl -fsS --max-time 1 "http://127.0.0.1:${ACTIVE_PORT}/json/version" >/dev/null 2>&1; then
+    if [[ -f "$WBDS_ACTIVE_THEME_DIR/theme.json" ]]; then
+      ACTIVE_THEME="$WBDS_ACTIVE_THEME_DIR"
+    else
+      ACTIVE_THEME="$WBDS_INSTALL_ROOT/presets/gothic-void-crusade"
+    fi
+    exec /bin/bash "$WBDS_INSTALL_ROOT/scripts/apply-theme-macos.sh" --theme "$ACTIVE_THEME"
+  fi
+fi
 exec /bin/bash "$WBDS_INSTALL_ROOT/scripts/start-workbuddy-dream-skin-macos.sh"

@@ -1,5 +1,5 @@
 /* WorkBuddy Dream Skin runtime stylesheet.
- * Keep selectors semantic: WorkBuddy 5.2.6 uses both stable BEM classes and
+ * Keep selectors semantic: WorkBuddy 5.3.3 uses both stable BEM classes and
  * build-hashed CSS Modules. Exact module hashes are intentionally avoided.
  */
 
@@ -12,19 +12,21 @@ html[data-workbuddy-dream-skin="active"] {
   --wbds-text-rgb: 238 247 255;
   --wbds-muted-rgb: 158 175 191;
   --wbds-line: rgba(154, 216, 255, 0.24);
-  --wbds-panel-opacity: 0.48;
-  --wbds-task-panel-opacity: 0.56;
+  --wbds-panel-opacity: 0.4;
+  --wbds-page-panel-opacity: 0.34;
+  --wbds-task-panel-opacity: 0.44;
   --wbds-settings-panel-opacity: 0.72;
-  --wbds-composer-opacity: 0.46;
-  --wbds-left-scrim-start: 0.32;
-  --wbds-left-scrim-mid: 0.1;
-  --wbds-left-scrim-end: 0.03;
-  --wbds-blur: 18px;
+  --wbds-composer-opacity: 0.4;
+  --wbds-left-scrim-start: 0.24;
+  --wbds-left-scrim-mid: 0.07;
+  --wbds-left-scrim-end: 0.02;
+  --wbds-blur: 11px;
   --wbds-focus-x: 72%;
   --wbds-focus-y: 46%;
   --wbds-art-home-opacity: 0.96;
-  --wbds-art-task-opacity: 0.28;
-  --wbds-art-settings-opacity: 0.12;
+  --wbds-art-page-opacity: 0.78;
+  --wbds-art-task-opacity: 0.62;
+  --wbds-art-settings-opacity: 0.28;
   --wbds-current-art-opacity: var(--wbds-art-home-opacity);
 
   /* WorkBuddy-native token bridge. Most components follow these variables, so
@@ -203,6 +205,34 @@ html[data-workbuddy-dream-skin="active"] .wb-dropdown {
 
 html[data-wbds-route="task"] {
   --wbds-current-art-opacity: var(--wbds-art-task-opacity);
+}
+
+html[data-wbds-route="assistant"],
+html[data-wbds-route="projects"],
+html[data-wbds-route="experts"],
+html[data-wbds-route="automation"],
+html[data-wbds-route="resources"] {
+  --wbds-current-art-opacity: var(--wbds-art-page-opacity);
+}
+
+/* WorkBuddy implements these destinations as separate, full-size native
+ * panels. Give each destination one readable glass layer instead of leaving
+ * its original opaque white canvas over the wallpaper. */
+html[data-workbuddy-dream-skin="active"] .claw-workspace,
+html[data-workbuddy-dream-skin="active"] .workbuddy-collab,
+html[data-workbuddy-dream-skin="active"] .expert-center-page,
+html[data-workbuddy-dream-skin="active"] .automation-main-page,
+html[data-workbuddy-dream-skin="active"] .my-files-panel,
+html[data-workbuddy-dream-skin="active"] .tencent-docs-panel {
+  background: rgb(var(--wbds-bg-rgb) / var(--wbds-page-panel-opacity)) !important;
+  -webkit-backdrop-filter: blur(calc(var(--wbds-blur) * 0.28)) saturate(1.02);
+  backdrop-filter: blur(calc(var(--wbds-blur) * 0.28)) saturate(1.02);
+}
+
+html[data-workbuddy-dream-skin="active"] .workbuddy-collab .landing,
+html[data-workbuddy-dream-skin="active"] .my-files-panel-content,
+html[data-workbuddy-dream-skin="active"] .tencent-docs-panel > * {
+  background-color: transparent !important;
 }
 
 html[data-wbds-route="task"] .teams-main-content {

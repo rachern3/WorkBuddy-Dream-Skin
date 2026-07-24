@@ -16,8 +16,8 @@
 - macOS Intel：脚本结构兼容，等待实机回归
 - Windows：主题运行时可复用，启动器与安装器尚未发布
 
-当前是 `0.2.1` 技术预览版，已经补齐双击换图、用户主题保存和跟随系统明暗模式。
-菜单栏应用和 Windows 安装包仍在后续范围内。
+当前是 `0.3.0` 技术预览版，已经补齐自定义换图、用户主题保存、跟随系统明暗模式、
+全页面背景和原生 macOS 菜单栏快捷入口。Windows 安装包仍在后续范围内。
 
 ## 安装
 
@@ -54,12 +54,17 @@ Install WorkBuddy Dream Skin.command
 - `WorkBuddy Dream Skin - Verify.command`
 - `WorkBuddy Dream Skin - Restore.command`
 
+macOS 顶部菜单栏也会出现一个图片图标。这里可以直接选择新背景、切换以前保存的
+背景、恢复项目内置背景，或恢复 WorkBuddy 官方外观。菜单栏工具会随登录自动启动；
+若只想安装脚本，可从终端给安装器传入 `--no-menubar`。
+
 ## 使用
 
 - `Start WorkBuddy Dream Skin.command`：以主题模式启动官方 WorkBuddy
 - `Customize WorkBuddy Dream Skin.command`：选择自己的图片、保存主题并立即应用
 - `Verify WorkBuddy Dream Skin.command`：校验签名、CDP 身份、样式和背景层
 - `Restore WorkBuddy.command`：移除运行时并用普通模式重新打开 WorkBuddy
+- `Install WorkBuddy Menu Bar.command`：单独重装顶部菜单栏快捷入口
 
 启动器发现 WorkBuddy 已在普通模式运行时会拒绝强制关闭，避免中断后台任务。
 
@@ -85,8 +90,8 @@ Install WorkBuddy Dream Skin.command
 
 更新引擎不会删除这些目录。主题默认使用 `appearance: auto`，跟随 WorkBuddy 的
 浅色/深色外观；当 WorkBuddy 跟随系统时，系统切换后主题也会同步切换。首页突出
-壁纸；侧栏和输入区是连续玻璃层；任务页与设置页保留更安静但仍可见的背景，并
-使用与当前外观匹配的高可读面板。
+壁纸；侧栏和输入区是连续玻璃层；任务页使用更薄的单层可读玻璃；助理、项目、
+专家/技能/连接器、自动化和“更多”内的原生页面也会连续显示同一张背景。
 
 图片原始大小必须小于等于 50 MiB，处理后的背景小于等于 16 MiB。推荐
 2560×1440 的纯背景图，不要把带 UI 的截图当作背景。
@@ -101,7 +106,7 @@ Install WorkBuddy Dream Skin.command
 
 - CDP 仅允许绑定 `127.0.0.1`
 - 校验官方 Bundle ID、严格代码签名和腾讯 Team ID
-- WorkBuddy 5.3.3 会在签名包内生成一个腾讯文档编辑器日志；仅对此精确路径允许资源封印例外，嵌套代码签名仍须通过
+- WorkBuddy 5.3.3 会在签名包内生成腾讯文档编辑器日志和一个固定名称形式的 Python 缓存；仅允许这两个严格限定的运行时数据例外，嵌套代码签名仍须通过
 - 只连接 WorkBuddy 主 Renderer，不注入登录页、网页预览或 WebView
 - Restore 只停止本项目创建并记录的 launchd 作业
 - CDP 对同一系统用户下的其他本机进程没有认证；主题运行时不要执行不可信程序
