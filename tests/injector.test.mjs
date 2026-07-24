@@ -48,6 +48,8 @@ test("theme payload is complete, deterministic, and syntactically valid", async 
   const second = await buildPayload(options);
   assert.equal(first.revision, second.revision);
   assert.equal(first.version, second.version);
+  assert.equal(first.artUrl, second.artUrl);
+  assert.match(first.artUrl, new RegExp(`\\?wbds=${first.revision}$`));
   assert.equal(first.theme.id, "gothic-void-crusade");
   assert.equal(first.theme.appearance, "auto");
   assert.ok(first.source.length > 10_000);

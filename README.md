@@ -16,7 +16,7 @@
 - macOS Intel：菜单栏应用已提供 Universal Binary，等待更多实机回归
 - Windows 10/11 x64：安装、托盘换图、验证和恢复流程已发布；首版等待用户实机反馈
 
-当前是 `0.4.0` 技术预览版，支持 macOS 与 Windows，并通过 GitHub Release 自动生成
+当前是 `0.4.1` 技术预览版，支持 macOS 与 Windows，并通过 GitHub Release 自动生成
 两个平台的下载 ZIP、SHA256 校验文件和版本页面。
 
 ## 安装

@@ -119,10 +119,15 @@ export async function buildPayload(options) {
   }
   const backgroundPath = await findBackground(options.themeDir);
   const background = await fs.readFile(backgroundPath);
-  const artUrl = pathToFileURL(backgroundPath).href;
   const revision = crypto.createHash("sha256")
     .update(cssText).update(runtimeTemplate).update(themeText).update(background)
     .digest("hex").slice(0, 16);
+  // User themes are staged at the stable current-theme/background.* path.
+  // Chromium otherwise keeps showing the previous file from its image cache
+  // after a hot theme switch, even though the bytes on disk have changed.
+  const artFileUrl = pathToFileURL(backgroundPath);
+  artFileUrl.searchParams.set("wbds", revision);
+  const artUrl = artFileUrl.href;
   const version = `${versionText.trim()}+${revision}`;
   let source = runtimeTemplate;
   source = replaceToken(source, "__WBDS_CSS_JSON__", JSON.stringify(cssText));
@@ -130,7 +135,7 @@ export async function buildPayload(options) {
   source = replaceToken(source, "__WBDS_THEME_JSON__", JSON.stringify(theme));
   source = replaceToken(source, "__WBDS_SELECTORS_JSON__", JSON.stringify(selectors));
   source = replaceToken(source, "__WBDS_VERSION_JSON__", JSON.stringify(version));
-  return { source, selectors, theme, version, revision, backgroundPath };
+  return { source, selectors, theme, version, revision, backgroundPath, artUrl };
 }
 
 async function fetchJson(url, timeoutMs = 2_500) {
