@@ -6,6 +6,7 @@ source "$SCRIPT_DIR/common-macos.sh"
 
 THEME_ID=""
 USE_BUNDLED=0
+USE_LOCAL_DEFAULT=0
 APPLY_NOW=1
 
 while [[ $# -gt 0 ]]; do
@@ -16,21 +17,27 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --bundled) USE_BUNDLED=1; shift ;;
+    --local-default) USE_LOCAL_DEFAULT=1; shift ;;
     --no-apply) APPLY_NOW=0; shift ;;
     *) wbds_die "未知参数：$1" ;;
   esac
 done
 
-if (( USE_BUNDLED )) && [[ -n "$THEME_ID" ]]; then
-  wbds_die "--bundled 和 --id 不能同时使用。"
+if (( USE_BUNDLED + USE_LOCAL_DEFAULT > 1 )) ||
+  (( USE_BUNDLED || USE_LOCAL_DEFAULT )) && [[ -n "$THEME_ID" ]]; then
+  wbds_die "--bundled、--local-default 和 --id 只能选择一个。"
 fi
-if (( ! USE_BUNDLED )) && [[ -z "$THEME_ID" ]]; then
-  wbds_die "请使用 --bundled，或传入 --id 主题 id。"
+if (( ! USE_BUNDLED && ! USE_LOCAL_DEFAULT )) && [[ -z "$THEME_ID" ]]; then
+  wbds_die "请使用 --bundled、--local-default，或传入 --id 主题 id。"
 fi
 
 if (( USE_BUNDLED )); then
   SOURCE_THEME="$WBDS_ROOT/presets/gothic-void-crusade"
 else
+  if (( USE_LOCAL_DEFAULT )); then
+    [[ -f "$WBDS_LOCAL_DEFAULT_FILE" && ! -L "$WBDS_LOCAL_DEFAULT_FILE" ]] || wbds_die "尚未设置本机默认背景。"
+    THEME_ID="$(/usr/bin/tr -d '\r\n' < "$WBDS_LOCAL_DEFAULT_FILE")"
+  fi
   [[ "$THEME_ID" =~ ^[a-zA-Z0-9._-]{1,96}$ ]] || wbds_die "主题 id 格式无效。"
   SOURCE_THEME="$WBDS_USER_THEMES_ROOT/$THEME_ID"
   [[ -d "$SOURCE_THEME" && ! -L "$SOURCE_THEME" ]] || wbds_die "找不到已保存主题：$THEME_ID"

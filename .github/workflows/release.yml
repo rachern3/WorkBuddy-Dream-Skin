@@ -1,0 +1,117 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - id: version
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="$(tr -d '[:space:]' < VERSION)"
+          package_version="$(node -p "JSON.parse(require('fs').readFileSync('package.json','utf8')).version")"
+          [[ "$RELEASE_TAG" == "v$version" && "$package_version" == "$version" ]]
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$(git rev-parse HEAD)" == "$(git rev-parse origin/main)" ]]
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  macos:
+    needs: guard
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - run: npm run check
+      - run: ./macos/scripts/build-release-zip.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: release/WorkBuddy-Dream-Skin-v${{ needs.guard.outputs.version }}-macOS.zip
+          if-no-files-found: error
+
+  windows:
+    needs: guard
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - shell: pwsh
+        run: ./windows/tests/run-static-tests.ps1
+      - run: npm test
+      - shell: powershell
+        run: ./windows/build-release.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: release/WorkBuddy-Dream-Skin-v${{ needs.guard.outputs.version }}-Windows.zip
+          if-no-files-found: error
+
+  publish:
+    needs: [guard, macos, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+      - shell: bash
+        env:
+          VERSION: ${{ needs.guard.outputs.version }}
+        run: |
+          set -euo pipefail
+          test -s "dist/WorkBuddy-Dream-Skin-v${VERSION}-macOS.zip"
+          test -s "dist/WorkBuddy-Dream-Skin-v${VERSION}-Windows.zip"
+          (cd dist && sha256sum *.zip > SHA256SUMS.txt)
+          cat > release-notes.md <<EOF
+          ## WorkBuddy Dream Skin v${VERSION}
+
+          - **macOS:** download `WorkBuddy-Dream-Skin-v${VERSION}-macOS.zip`, unzip it, then double-click `Install WorkBuddy Dream Skin.command`.
+          - **Windows 10/11:** download `WorkBuddy-Dream-Skin-v${VERSION}-Windows.zip`, unblock the ZIP in Properties if Windows marks it as downloaded, unzip it, then double-click `Install WorkBuddy Dream Skin - Windows.cmd`.
+
+          The packages modify neither the official WorkBuddy binary nor `app.asar`. They use a loopback-only CDP session and retain one-click restore actions.
+
+          The public packages include only the distributable Gothic Void Crusade background. The Arina/Hashimoto reference image is not redistributed in release packages; users can import images they have the right to use.
+          EOF
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.guard.outputs.version }}
+        run: |
+          gh release create "v${VERSION}" \
+            --title "WorkBuddy Dream Skin v${VERSION}" \
+            --notes-file release-notes.md \
+            dist/WorkBuddy-Dream-Skin-v${VERSION}-macOS.zip \
+            dist/WorkBuddy-Dream-Skin-v${VERSION}-Windows.zip \
+            dist/SHA256SUMS.txt

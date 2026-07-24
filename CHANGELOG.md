@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+
+- 新增 Windows 10/11 安装、启动、换图、主题切换、系统托盘、验证和恢复流程。
+- Windows 运行时验证官方 Authenticode 签名、腾讯发行信息及回环端口监听进程，不修改官方安装目录。
+- macOS 菜单栏应用改为同时包含 Apple Silicon 与 Intel 的 Universal Binary。
+- 新增标签触发的 GitHub Release 工作流，自动发布 macOS/Windows ZIP 与 SHA256 校验文件。
+- 支持“本机默认背景”，用于保留不适合进入公开安装包的个人图片；公开 Release 继续仅附带可分发预设。
+
 ## 0.3.0
 
 - 降低浅色与深色任务页、侧栏和输入框的蒙层厚度，背景细节更清楚。

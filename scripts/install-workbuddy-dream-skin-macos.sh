@@ -20,6 +20,12 @@ wbds_ensure_state_root
 /usr/bin/rsync -a --delete \
   --exclude '.git' --exclude 'node_modules' --exclude 'release' --exclude 'work' \
   "$WBDS_ROOT/" "$WBDS_INSTALL_ROOT/"
+if [[ "$WBDS_ROOT" != "$WBDS_INSTALL_ROOT" && -d "$WBDS_ROOT/release/WorkBuddy Dream Skin Menu Bar.app" ]]; then
+  /bin/mkdir -p "$WBDS_INSTALL_ROOT/release"
+  /bin/rm -rf "$WBDS_INSTALL_ROOT/release/WorkBuddy Dream Skin Menu Bar.app"
+  /usr/bin/ditto "$WBDS_ROOT/release/WorkBuddy Dream Skin Menu Bar.app" \
+    "$WBDS_INSTALL_ROOT/release/WorkBuddy Dream Skin Menu Bar.app"
+fi
 /bin/chmod +x "$WBDS_INSTALL_ROOT"/*.command "$WBDS_INSTALL_ROOT"/scripts/*.sh "$WBDS_INSTALL_ROOT"/scripts/*.mjs
 /bin/chmod +x "$WBDS_INSTALL_ROOT"/macos/scripts/*.sh
 

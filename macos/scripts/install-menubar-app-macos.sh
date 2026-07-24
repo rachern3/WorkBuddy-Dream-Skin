@@ -10,7 +10,17 @@ LABEL="com.rachern3.workbuddy-dream-skin.menubar"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 LAUNCH_ENV=(/usr/bin/env -i "HOME=$HOME" "USER=$USER" "LOGNAME=$USER" "PATH=/usr/bin:/bin:/usr/sbin:/sbin")
 
-/bin/bash "$ROOT/macos/scripts/build-menubar-app.sh" --output "$BUILD_APP"
+EXPECTED_VERSION="$(/usr/bin/tr -d '[:space:]' < "$ROOT/VERSION")"
+HOST_ARCH="$(/usr/bin/uname -m)"
+PREBUILT_OK=0
+if [[ -d "$BUILD_APP" ]] && /usr/bin/codesign --verify --deep --strict "$BUILD_APP" >/dev/null 2>&1; then
+  BUILD_VERSION="$(/usr/bin/plutil -extract CFBundleShortVersionString raw -o - "$BUILD_APP/Contents/Info.plist" 2>/dev/null || true)"
+  BUILD_ARCHS="$(/usr/bin/lipo -archs "$BUILD_APP/Contents/MacOS/WorkBuddyDreamSkinMenuBar" 2>/dev/null || true)"
+  [[ "$BUILD_VERSION" == "$EXPECTED_VERSION" && " $BUILD_ARCHS " == *" $HOST_ARCH "* ]] && PREBUILT_OK=1
+fi
+if (( PREBUILT_OK == 0 )); then
+  /bin/bash "$ROOT/macos/scripts/build-menubar-app.sh" --output "$BUILD_APP"
+fi
 
 if [[ -e "$INSTALL_APP" ]]; then
   [[ ! -L "$INSTALL_APP" ]] || wbds_die "拒绝覆盖符号链接：$INSTALL_APP"

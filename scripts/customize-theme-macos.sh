@@ -8,6 +8,7 @@ IMAGE=""
 THEME_NAME=""
 APPEARANCE="auto"
 APPLY_NOW=1
+SET_LOCAL_DEFAULT=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -15,6 +16,7 @@ while [[ $# -gt 0 ]]; do
     --name) THEME_NAME="${2:-}"; shift 2 ;;
     --appearance) APPEARANCE="${2:-}"; shift 2 ;;
     --no-apply) APPLY_NOW=0; shift ;;
+    --set-local-default) SET_LOCAL_DEFAULT=1; shift ;;
     *) wbds_die "未知参数：$1" ;;
   esac
 done
@@ -72,9 +74,16 @@ wbds_node "$WBDS_ROOT/scripts/write-theme.mjs" custom \
 
 /usr/bin/rsync -a --delete "$LIBRARY_DIR/" "$WBDS_ACTIVE_THEME_DIR/"
 /bin/chmod 600 "$WBDS_ACTIVE_THEME_DIR"/*
+if (( SET_LOCAL_DEFAULT )); then
+  DEFAULT_TMP="$WBDS_STATE_ROOT/.local-default-theme-id.$$"
+  /usr/bin/printf '%s\n' "$THEME_ID" > "$DEFAULT_TMP"
+  /bin/chmod 600 "$DEFAULT_TMP"
+  /bin/mv -f "$DEFAULT_TMP" "$WBDS_LOCAL_DEFAULT_FILE"
+fi
 trap - EXIT
 
 wbds_info "已保存主题：${THEME_NAME}（外观：${APPEARANCE}）"
+(( SET_LOCAL_DEFAULT )) && wbds_info "已设为本机默认背景。"
 if (( APPLY_NOW )); then
   /bin/bash "$WBDS_ROOT/scripts/apply-theme-macos.sh" --theme "$WBDS_ACTIVE_THEME_DIR"
   /usr/bin/osascript -e 'display notification "新背景已应用，并会继续跟随系统明暗模式。" with title "WorkBuddy Dream Skin"' >/dev/null 2>&1 || true

@@ -22,3 +22,19 @@ jobs:
           package-manager-cache: false
       - run: npm test
       - run: npm run check
+
+  windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        executable: [powershell.exe, pwsh.exe]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - shell: cmd
+        run: ${{ matrix.executable }} -NoLogo -NoProfile -ExecutionPolicy RemoteSigned -File .\windows\tests\run-static-tests.ps1
+      - run: npm test

@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
   private var activeThemeDirectory: URL { stateRoot.appendingPathComponent("current-theme", isDirectory: true) }
   private var themesDirectory: URL { stateRoot.appendingPathComponent("themes", isDirectory: true) }
+  private var localDefaultFile: URL { stateRoot.appendingPathComponent("local-default-theme-id") }
   private var bundledThemeDirectory: URL { engineRoot.appendingPathComponent("presets/gothic-void-crusade", isDirectory: true) }
 
   func applicationDidFinishLaunching(_ notification: Notification) {
@@ -48,7 +49,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     let switchItem = NSMenuItem(title: "快速切换背景", action: nil, keyEquivalent: "")
     let switchMenu = NSMenu(title: "快速切换背景")
-    let bundled = item("内置背景 · Gothic Void Crusade", action: #selector(useBundledBackground))
+    if let localDefault = localDefaultTheme() {
+      let local = item("本机默认背景 · \(localDefault.name)", action: #selector(useSavedBackground(_:)))
+      local.representedObject = localDefault.id
+      local.state = active?.id == localDefault.id ? .on : .off
+      switchMenu.addItem(local)
+      switchMenu.addItem(.separator())
+    }
+    let bundled = item("公开内置背景 · Gothic Void Crusade", action: #selector(useBundledBackground))
     bundled.state = active?.id == "gothic-void-crusade" ? .on : .off
     switchMenu.addItem(bundled)
 
@@ -178,6 +186,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
   private func activeThemeMetadata() -> ThemeMetadata? {
     readTheme(at: activeThemeDirectory)
+  }
+
+  private func localDefaultTheme() -> ThemeMetadata? {
+    guard let raw = try? String(contentsOf: localDefaultFile, encoding: .utf8) else { return nil }
+    let id = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard id.range(of: "^[A-Za-z0-9._-]{1,96}$", options: .regularExpression) != nil else { return nil }
+    return readTheme(at: themesDirectory.appendingPathComponent(id, isDirectory: true))
   }
 
   private func loadSavedThemes() -> [ThemeMetadata] {
