@@ -73,7 +73,26 @@ html[data-workbuddy-dream-skin="active"] body {
 }
 
 #workbuddy-dream-skin-art {
-  display: none;
+  display: block;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  contain: strict;
+  background-color: rgb(var(--wbds-bg-rgb));
+  background-image:
+    linear-gradient(90deg, rgb(var(--wbds-bg-rgb) / var(--wbds-left-scrim-start)) 0%, rgb(var(--wbds-bg-rgb) / var(--wbds-left-scrim-mid)) 52%, rgb(var(--wbds-bg-rgb) / var(--wbds-left-scrim-end)) 100%),
+    linear-gradient(rgb(var(--wbds-bg-rgb) / calc(1 - var(--wbds-current-art-opacity))), rgb(var(--wbds-bg-rgb) / calc(1 - var(--wbds-current-art-opacity)))),
+    var(--wbds-art);
+  background-size: cover;
+  background-position: var(--wbds-focus-x) var(--wbds-focus-y);
+  background-repeat: no-repeat;
+  transform: translateZ(0);
+  transition: background-color 180ms ease, background-position 220ms ease;
 }
 
 html[data-workbuddy-dream-skin="active"] #root,
@@ -96,17 +115,15 @@ html[data-workbuddy-dream-skin="active"] [class*="_emptyStateContainer_"] {
 html[data-workbuddy-dream-skin="active"] #root {
   position: relative;
   z-index: 1;
+  min-width: 100vw;
+  min-height: 100vh;
 }
 
 html[data-workbuddy-dream-skin="active"] .teams-container {
-  background-color: rgb(var(--wbds-bg-rgb)) !important;
-  background-image:
-    linear-gradient(90deg, rgb(var(--wbds-bg-rgb) / var(--wbds-left-scrim-start)) 0%, rgb(var(--wbds-bg-rgb) / var(--wbds-left-scrim-mid)) 52%, rgb(var(--wbds-bg-rgb) / var(--wbds-left-scrim-end)) 100%),
-    linear-gradient(rgb(var(--wbds-bg-rgb) / calc(1 - var(--wbds-current-art-opacity))), rgb(var(--wbds-bg-rgb) / calc(1 - var(--wbds-current-art-opacity)))),
-    var(--wbds-art) !important;
-  background-size: cover !important;
-  background-position: var(--wbds-focus-x) var(--wbds-focus-y) !important;
-  background-repeat: no-repeat !important;
+  min-width: 100vw;
+  min-height: 100vh;
+  background-color: transparent !important;
+  background-image: none !important;
 }
 
 html[data-workbuddy-dream-skin="active"] .conversation-sidebar,

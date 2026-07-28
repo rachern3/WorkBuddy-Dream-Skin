@@ -62,11 +62,31 @@
     if (themeConfig?.appearance === "dark" || themeConfig?.appearance === "light") {
       return themeConfig.appearance;
     }
+    const root = document.documentElement;
+    const body = document.body;
+    const nativeThemeValue = [
+      root?.getAttribute("data-theme"),
+      root?.getAttribute("data-color-mode"),
+      root?.getAttribute("data-appearance"),
+      root?.getAttribute("data-vscode-theme-name"),
+      body?.getAttribute("data-theme"),
+      body?.getAttribute("data-color-mode"),
+      body?.getAttribute("data-appearance"),
+      body?.getAttribute("data-vscode-theme-name"),
+    ].filter(Boolean).join(" ").toLowerCase();
+    const classTokens = new Set([
+      ...String(root?.className || "").toLowerCase().split(/\s+/),
+      ...String(body?.className || "").toLowerCase().split(/\s+/),
+    ]);
+    if (["dark", "cb-dark", "vscode-dark"].some((token) => classTokens.has(token)) ||
+        /(?:^|[\s_-])(?:dark|night)(?:$|[\s_-])/.test(nativeThemeValue)) return "dark";
+    if (["light", "cb-light", "vscode-light"].some((token) => classTokens.has(token)) ||
+        /(?:^|[\s_-])light(?:$|[\s_-])/.test(nativeThemeValue)) return "light";
     const lightSelector = selectorContract?.themeSignals?.light;
     const darkSelector = selectorContract?.themeSignals?.dark;
     try {
-      if (lightSelector && document.querySelector(lightSelector)) return "light";
       if (darkSelector && document.querySelector(darkSelector)) return "dark";
+      if (lightSelector && document.querySelector(lightSelector)) return "light";
     } catch {}
     return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light";
   };
@@ -211,7 +231,12 @@
   const start = () => {
     ensure();
     observer = new MutationObserver(schedule);
-    observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "data-theme", "data-vscode-theme-name"] });
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["class", "data-theme", "data-color-mode", "data-appearance", "data-vscode-theme-name"],
+    });
     listen(window, "hashchange", schedule);
     listen(window, "popstate", schedule);
     listen(window.matchMedia?.("(prefers-color-scheme: dark)"), "change", schedule);
@@ -244,6 +269,7 @@
       version,
       route: document.documentElement?.getAttribute("data-wbds-route") || null,
       appearance: document.documentElement?.getAttribute("data-wbds-appearance") || null,
+      appearanceMode: themeConfig?.appearance || "auto",
       style: Boolean(document.getElementById(STYLE_ID)),
       art: Boolean(document.getElementById(ART_ID)),
       markers: Object.fromEntries((selectorContract?.selectors || []).map((entry) => {

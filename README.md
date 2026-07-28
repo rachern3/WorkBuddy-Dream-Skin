@@ -16,7 +16,7 @@
 - macOS Intel：菜单栏应用已提供 Universal Binary，等待更多实机回归
 - Windows 10/11 x64：安装、托盘换图、验证和恢复流程已发布；首版等待用户实机反馈
 
-当前是 `0.4.2` 技术预览版，支持 macOS 与 Windows，并通过 GitHub Release 自动生成
+当前是 `0.5.0` 技术预览版，支持 macOS 与 Windows，并通过 GitHub Release 自动生成
 两个平台的下载 ZIP、SHA256 校验文件和版本页面。
 
 ## 安装
@@ -106,8 +106,9 @@ Windows 引擎安装到 `%LOCALAPPDATA%\WorkBuddyDreamSkin\engine`，桌面会�
 ~/Library/Application Support/WorkBuddyDreamSkin/current-theme
 ```
 
-更新引擎不会删除这些目录。主题默认使用 `appearance: auto`，跟随 WorkBuddy 的
-浅色/深色外观；当 WorkBuddy 跟随系统时，系统切换后主题也会同步切换。首页突出
+更新引擎不会删除这些目录。主题默认使用 `appearance: auto`，优先识别 WorkBuddy 的
+原生主题信号并跟随其浅色/深色外观；当 WorkBuddy 跟随系统时，系统切换后主题也会同步切换。
+壁纸由独立的整窗视口层承载，不再依赖某一个页面容器。首页突出
 壁纸；侧栏和输入区是连续玻璃层；任务页使用更薄的单层可读玻璃；助理、项目、
 专家/技能/连接器、自动化和“更多”内的原生页面也会连续显示同一张背景。
 

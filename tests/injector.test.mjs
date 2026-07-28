@@ -56,6 +56,13 @@ test("theme payload is complete, deterministic, and syntactically valid", async 
   assert.match(first.source, /prefers-color-scheme: dark/);
   assert.match(first.source, /DEFAULT_PALETTES/);
   assert.match(first.source, /data-wbds-appearance/);
+  assert.match(first.source, /nativeThemeValue/);
+  assert.match(first.source, /data-color-mode/);
+  assert.match(first.source, /appearanceMode/);
+  assert.match(first.source, /#workbuddy-dream-skin-art/);
+  assert.match(first.source, /position: fixed/);
+  assert.match(first.source, /width: 100vw/);
+  assert.match(first.source, /background-image: none !important/);
   assert.match(first.source, /--wbds-composer-opacity/);
   assert.match(first.source, /--wbds-page-panel-opacity/);
   assert.match(first.source, /\.claw-workspace/);

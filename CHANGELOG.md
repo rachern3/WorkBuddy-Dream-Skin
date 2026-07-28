@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+- 将壁纸从 WorkBuddy 主容器迁移到固定的整窗视口背景层，页面切换或容器变化时仍连续覆盖整个客户端区域。
+- 增强 `appearance: auto`：识别 WorkBuddy 的 class、主题属性、VS Code 主题名及系统明暗模式，并实时更新玻璃层、文字和输入区配色。
+- macOS 与 Windows 共享同一套全覆盖及明暗自适应运行时；系统原生标题栏仍由操作系统负责绘制。
+
 ## 0.4.2
 
 - 修复 Windows PowerShell 5.1 在单个 WorkBuddy 进程上读取 `Count` 触发的安装失败。
