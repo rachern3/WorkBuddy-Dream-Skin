@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import {
@@ -44,6 +45,7 @@ test("only the official WorkBuddy main renderer shape is accepted", () => {
 
 test("theme payload is complete, deterministic, and syntactically valid", async () => {
   const options = parseArgs([]);
+  const css = await readFile(new URL("../assets/workbuddy-dream-skin.css", import.meta.url), "utf8");
   const first = await buildPayload(options);
   const second = await buildPayload(options);
   assert.equal(first.revision, second.revision);
@@ -63,6 +65,10 @@ test("theme payload is complete, deterministic, and syntactically valid", async 
   assert.match(first.source, /position: fixed/);
   assert.match(first.source, /width: 100vw/);
   assert.match(first.source, /background-image: none !important/);
+  assert.match(css, /\.wb-home-composer \{\s+background: transparent !important/);
+  assert.match(css, /\.wb-home-composer__input-slot,/);
+  assert.match(css, /\.workbuddy-topbar \{\s+background: transparent !important/);
+  assert.match(css, /\.wb-home-composer__input-slot,[\s\S]*?box-shadow: none !important/);
   assert.match(first.source, /--wbds-composer-opacity/);
   assert.match(first.source, /--wbds-page-panel-opacity/);
   assert.match(first.source, /\.claw-workspace/);
