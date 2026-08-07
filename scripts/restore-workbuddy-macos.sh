@@ -7,9 +7,18 @@ source "$SCRIPT_DIR/common-macos.sh"
 REOPEN=1
 [[ "${1:-}" == "--no-reopen" ]] && REOPEN=0
 wbds_verify_app
+wbds_disable_auto_restore
+LEGACY_INJECTOR_PID="$(wbds_job_pid "$WBDS_INJECTOR_LABEL" || true)"
+LEGACY_APP_PID="$(wbds_job_pid "$WBDS_APP_LABEL" || true)"
 
 if [[ ! -f "$WBDS_SESSION_STATE" ]]; then
   wbds_job_remove "$WBDS_INJECTOR_LABEL"
+  wbds_job_remove "$WBDS_APP_LABEL"
+  wbds_stop_owned_pid "$LEGACY_INJECTOR_PID" injector "旧注入器" || wbds_die "旧主题注入器未能安全停止。"
+  wbds_stop_owned_pid "$LEGACY_APP_PID" app "旧 WorkBuddy 皮肤进程" || wbds_die "旧 WorkBuddy 皮肤进程未能安全停止。"
+  wbds_stop_recorded_injector || wbds_die "主题注入器未能安全停止。"
+  wbds_stop_all_owned_role injector "残留注入器" || wbds_die "残留主题注入器未能安全停止。"
+  wbds_stop_all_owned_role app "残留 WorkBuddy 皮肤进程" || wbds_die "残留 WorkBuddy 皮肤进程未能安全停止。"
   /bin/rm -f "$WBDS_INJECTOR_STATE"
   wbds_info "没有活动的皮肤会话；官方 WorkBuddy 未被修改。"
   exit 0
@@ -26,6 +35,12 @@ fi
 
 wbds_job_remove "$WBDS_INJECTOR_LABEL"
 wbds_job_remove "$WBDS_APP_LABEL"
+wbds_stop_owned_pid "$LEGACY_INJECTOR_PID" injector "旧注入器" || wbds_die "旧主题注入器未能安全停止。"
+wbds_stop_owned_pid "$LEGACY_APP_PID" app "旧 WorkBuddy 皮肤进程" || wbds_die "旧 WorkBuddy 皮肤进程未能安全停止。"
+wbds_stop_recorded_injector || wbds_die "主题注入器未能安全停止。"
+wbds_stop_recorded_app || wbds_die "WorkBuddy 皮肤进程未能安全停止。"
+wbds_stop_all_owned_role injector "残留注入器" || wbds_die "残留主题注入器未能安全停止。"
+wbds_stop_all_owned_role app "残留 WorkBuddy 皮肤进程" || wbds_die "残留 WorkBuddy 皮肤进程未能安全停止。"
 /bin/rm -f "$WBDS_INJECTOR_STATE" "$WBDS_SESSION_STATE"
 
 if (( REOPEN )); then

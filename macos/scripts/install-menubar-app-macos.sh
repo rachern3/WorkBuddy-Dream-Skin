@@ -30,6 +30,23 @@ fi
 
 /bin/mkdir -p "$HOME/Applications" "$HOME/Library/LaunchAgents"
 "${LAUNCH_ENV[@]}" /bin/launchctl bootout "gui/$(/usr/bin/id -u)/$LABEL" >/dev/null 2>&1 || true
+EXISTING_EXECUTABLE="$INSTALL_APP/Contents/MacOS/WorkBuddyDreamSkinMenuBar"
+EXISTING_PIDS=("")
+while read -r pid command; do
+  [[ -n "$pid" && "$command" == "$EXISTING_EXECUTABLE" ]] && EXISTING_PIDS+=("$pid")
+done < <(/bin/ps -axo pid=,command=)
+for pid in "${EXISTING_PIDS[@]}"; do
+  [[ -n "$pid" ]] || continue
+  /bin/kill -TERM "$pid" >/dev/null 2>&1 || true
+done
+for pid in "${EXISTING_PIDS[@]}"; do
+  [[ -n "$pid" ]] || continue
+  for _ in {1..50}; do
+    /bin/kill -0 "$pid" >/dev/null 2>&1 || break
+    /bin/sleep 0.1
+  done
+  /bin/kill -0 "$pid" >/dev/null 2>&1 && wbds_die "旧菜单栏程序未能安全退出：PID=$pid"
+done
 /bin/rm -rf "$INSTALL_APP"
 /usr/bin/ditto "$BUILD_APP" "$INSTALL_APP"
 /usr/bin/codesign --verify --deep --strict "$INSTALL_APP"
@@ -52,6 +69,8 @@ trap '/bin/rm -f "$TMP_PLIST"' EXIT
   echo '<string>'"$INSTALL_APP"'/Contents/MacOS/WorkBuddyDreamSkinMenuBar</string>'
   echo '</array>'
   echo '<key>RunAtLoad</key><true/>'
+  echo '<key>KeepAlive</key><true/>'
+  echo '<key>ThrottleInterval</key><integer>10</integer>'
   echo '<key>ProcessType</key><string>Interactive</string>'
   echo '</dict></plist>'
 } > "$TMP_PLIST"
@@ -61,5 +80,13 @@ trap '/bin/rm -f "$TMP_PLIST"' EXIT
 trap - EXIT
 
 "${LAUNCH_ENV[@]}" /bin/launchctl bootstrap "gui/$(/usr/bin/id -u)" "$PLIST"
-"${LAUNCH_ENV[@]}" /bin/launchctl kickstart -k "gui/$(/usr/bin/id -u)/$LABEL"
+STARTED=0
+for _ in {1..50}; do
+  if /usr/bin/pgrep -f "^$INSTALL_APP/Contents/MacOS/WorkBuddyDreamSkinMenuBar$" >/dev/null 2>&1; then
+    STARTED=1
+    break
+  fi
+  /bin/sleep 0.1
+done
+(( STARTED == 1 )) || wbds_die "菜单栏快捷入口未能在安装后启动。"
 wbds_info "菜单栏快捷入口已安装：$INSTALL_APP"

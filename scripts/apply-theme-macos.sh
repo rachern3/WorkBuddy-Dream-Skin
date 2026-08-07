@@ -31,23 +31,30 @@ if [[ -f "$WBDS_SESSION_STATE" ]]; then
   PORT="$(wbds_read_state port || true)"
   if [[ "$PORT" =~ ^[0-9]+$ ]] &&
     /usr/bin/curl -fsS --max-time 1 "http://127.0.0.1:${PORT}/json/version" >/dev/null 2>&1; then
+    wbds_acquire_operation_lock || wbds_die "另一个皮肤操作正在进行，请稍后重试。"
+    trap wbds_release_operation_lock EXIT
     OLD_INJECTOR_PID="$(/usr/bin/plutil -extract pid raw -o - "$WBDS_INJECTOR_STATE" 2>/dev/null || true)"
     wbds_job_remove "$WBDS_INJECTOR_LABEL"
-    for _ in {1..40}; do
-      if [[ ! "$OLD_INJECTOR_PID" =~ ^[0-9]+$ ]] || ! /bin/kill -0 "$OLD_INJECTOR_PID" >/dev/null 2>&1; then
-        break
-      fi
-      /bin/sleep 0.1
-    done
-    if [[ "$OLD_INJECTOR_PID" =~ ^[0-9]+$ ]] && /bin/kill -0 "$OLD_INJECTOR_PID" >/dev/null 2>&1; then
+    wbds_stop_owned_pid "$OLD_INJECTOR_PID" injector "旧主题注入器" ||
       wbds_die "旧主题注入器未能安全停止。"
-    fi
     /bin/rm -f "$WBDS_INJECTOR_STATE"
 
-    /bin/launchctl submit -l "$WBDS_INJECTOR_LABEL" -- \
-      /usr/bin/env ELECTRON_RUN_AS_NODE=1 \
+    wbds_launch_once "$WBDS_INJECTOR_LABEL" "$WBDS_INJECTOR_JOB_PLIST" \
+      /usr/bin/env -i "HOME=$HOME" "USER=${USER:-$(/usr/bin/id -un)}" \
+      "LOGNAME=${LOGNAME:-${USER:-$(/usr/bin/id -un)}}" "PATH=/usr/bin:/bin:/usr/sbin:/sbin" \
+      "LANG=${LANG:-zh_CN.UTF-8}" "TMPDIR=${TMPDIR:-/tmp}" ELECTRON_RUN_AS_NODE=1 \
       "$WBDS_EXECUTABLE" "$WBDS_ROOT/scripts/injector.mjs" \
       --port "$PORT" --watch --theme "$THEME_DIR" --state "$WBDS_INJECTOR_STATE"
+    NEW_INJECTOR_PID="$WBDS_LAST_SPAWN_PID"
+    cleanup_failed_hot_apply() {
+      local status=$?
+      wbds_stop_owned_pid "$NEW_INJECTOR_PID" injector "新主题注入器" || true
+      wbds_job_remove "$WBDS_INJECTOR_LABEL"
+      /bin/rm -f "$WBDS_INJECTOR_STATE"
+      wbds_release_operation_lock
+      return "$status"
+    }
+    trap cleanup_failed_hot_apply EXIT
 
     ACTIVE=0
     deadline=$((SECONDS + 20))
@@ -61,7 +68,11 @@ if [[ -f "$WBDS_SESSION_STATE" ]]; then
       /bin/sleep 0.25
     done
     (( ACTIVE == 1 )) || wbds_die "新主题未能在 20 秒内完成热应用。"
+    RECORDED_INJECTOR_PID="$(/usr/bin/plutil -extract pid raw -o - "$WBDS_INJECTOR_STATE" 2>/dev/null || true)"
+    [[ "$RECORDED_INJECTOR_PID" == "$NEW_INJECTOR_PID" ]] || wbds_die "新注入器 PID 与刚启动的进程不一致。"
     wbds_update_session_theme "$THEME_DIR"
+    wbds_release_operation_lock
+    trap - EXIT
     wbds_info "已立即应用主题：$THEME_ID"
     exit 0
   fi

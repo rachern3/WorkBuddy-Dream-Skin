@@ -12,11 +12,11 @@
 
 ## 当前状态
 
-- macOS Apple Silicon：已在 WorkBuddy 5.3.3 / Electron 37.10.3 实机验证
+- macOS Apple Silicon：已在 WorkBuddy 5.3.3 与 5.3.8 实机验证
 - macOS Intel：菜单栏应用已提供 Universal Binary，等待更多实机回归
 - Windows 10/11 x64：安装、托盘换图、验证和恢复流程已发布；首版等待用户实机反馈
 
-当前是 `0.5.1` 技术预览版，支持 macOS 与 Windows，并通过 GitHub Release 自动生成
+当前是 `0.5.2` 技术预览版，支持 macOS 与 Windows，并通过 GitHub Release 自动生成
 两个平台的下载 ZIP、SHA256 校验文件和版本页面。
 
 ## 安装
@@ -60,7 +60,9 @@ Install WorkBuddy Dream Skin.command
 - `WorkBuddy Dream Skin - Restore.command`
 
 macOS 顶部菜单栏也会出现一个图片图标。这里可以直接选择新背景、切换以前保存的
-背景、恢复项目内置背景，或恢复 WorkBuddy 官方外观。菜单栏工具会随登录自动启动；
+背景、恢复项目内置背景，或恢复 WorkBuddy 官方外观。菜单栏工具会随登录常驻；
+WorkBuddy 正常退出后再从官方图标打开时，它会自动恢复当前背景。若辅助程序异常退出，
+launchd 会在限速保护下重新启动它，但不会因此重启 WorkBuddy；
 若只想安装脚本，可从终端给安装器传入 `--no-menubar`。
 
 ### Windows
@@ -133,9 +135,9 @@ Crusade；其他用户可以导入自己有权使用的图片。若未来取得�
 - CDP 仅允许绑定 `127.0.0.1`
 - macOS 校验官方 Bundle ID、严格代码签名和腾讯 Team ID
 - Windows 校验 `WorkBuddy.exe` Authenticode 签名、腾讯发行信息、产品元数据和端口监听进程路径
-- WorkBuddy 5.3.3 会在签名包内生成腾讯文档编辑器日志和一个固定名称形式的 Python 缓存；仅允许这两个严格限定的运行时数据例外，嵌套代码签名仍须通过
+- WorkBuddy 5.3.3/5.3.8 会在签名包内生成腾讯文档编辑器日志和固定名称形式的 Python 缓存；仅允许这些严格限定的运行时数据例外，嵌套代码签名仍须通过
 - 只连接 WorkBuddy 主 Renderer，不注入登录页、网页预览或 WebView
-- Restore 只停止本项目创建并记录的 launchd 作业
+- Restore 只停止身份验证通过的当前 WorkBuddy 主进程、注入器与本项目创建的 launchd 作业
 - Windows Restore 只停止状态文件中记录且进程身份匹配的注入器
 - CDP 对同一系统用户下的其他本机进程没有认证；主题运行时不要执行不可信程序
 

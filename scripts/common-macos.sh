@@ -11,12 +11,18 @@ WBDS_INSTALL_ROOT="${HOME}/.workbuddy-dream-skin/studio"
 WBDS_USER_THEMES_ROOT="$WBDS_STATE_ROOT/themes"
 WBDS_ACTIVE_THEME_DIR="$WBDS_STATE_ROOT/current-theme"
 WBDS_LOCAL_DEFAULT_FILE="$WBDS_STATE_ROOT/local-default-theme-id"
+WBDS_AUTO_PORT_FILE="$WBDS_STATE_ROOT/auto-port"
+WBDS_AUTO_RESTORE_DISABLED="$WBDS_STATE_ROOT/auto-restore-disabled"
+WBDS_OPERATION_LOCK="$WBDS_STATE_ROOT/operation.lock"
+WBDS_APP_JOB_PLIST="$WBDS_STATE_ROOT/app-runtime.plist"
+WBDS_INJECTOR_JOB_PLIST="$WBDS_STATE_ROOT/injector-runtime.plist"
 WBDS_APP_LABEL="com.rachern3.workbuddy-dream-skin.app"
 WBDS_INJECTOR_LABEL="com.rachern3.workbuddy-dream-skin.injector"
 WBDS_EXPECTED_BUNDLE_ID="com.workbuddy.workbuddy"
 WBDS_EXPECTED_TEAM_ID="FN2V63AD2J"
 WBDS_DEFAULT_PORT=9432
 WBDS_LAST_PORT=9532
+WBDS_LAST_SPAWN_PID=""
 
 wbds_die() {
   echo "WorkBuddy Dream Skin: $*" >&2
@@ -101,7 +107,7 @@ wbds_workbuddy_pids() {
   local pid command
   while read -r pid command; do
     [[ -n "$pid" ]] || continue
-    if [[ "$command" == "$WBDS_EXECUTABLE" || "$command" == "$WBDS_EXECUTABLE --"* ]]; then
+    if wbds_command_matches_role "$command" workbuddy-main; then
       printf '%s\n' "$pid"
     fi
   done < <(/bin/ps -axo pid=,command=)
@@ -120,6 +126,81 @@ wbds_choose_port() {
     fi
   done
   wbds_die "端口 $WBDS_DEFAULT_PORT-$WBDS_LAST_PORT 均被占用。"
+}
+
+wbds_read_auto_port() {
+  local port
+  port="$(/usr/bin/tr -d '[:space:]' < "$WBDS_AUTO_PORT_FILE" 2>/dev/null || true)"
+  [[ "$port" =~ ^[0-9]+$ ]] && (( port >= WBDS_DEFAULT_PORT && port <= WBDS_LAST_PORT )) || return 1
+  printf '%s\n' "$port"
+}
+
+wbds_enable_auto_restore() {
+  local port="$1" temporary
+  [[ "$port" =~ ^[0-9]+$ ]] && (( port >= WBDS_DEFAULT_PORT && port <= WBDS_LAST_PORT )) ||
+    wbds_die "自动恢复端口无效：$port"
+  wbds_ensure_state_root
+  temporary="${WBDS_AUTO_PORT_FILE}.tmp.$$"
+  /usr/bin/printf '%s\n' "$port" > "$temporary"
+  /bin/chmod 600 "$temporary"
+  /bin/mv "$temporary" "$WBDS_AUTO_PORT_FILE"
+  /bin/rm -f "$WBDS_AUTO_RESTORE_DISABLED"
+  /bin/launchctl setenv WORKBUDDY_REMOTE_DEBUGGING_PORT "$port"
+}
+
+wbds_publish_auto_restore() {
+  local port
+  [[ ! -e "$WBDS_AUTO_RESTORE_DISABLED" ]] || return 1
+  port="$(wbds_read_auto_port || true)"
+  if [[ -z "$port" ]]; then
+    port="$(wbds_choose_port)"
+    wbds_enable_auto_restore "$port"
+  else
+    /bin/launchctl setenv WORKBUDDY_REMOTE_DEBUGGING_PORT "$port"
+  fi
+  printf '%s\n' "$port"
+}
+
+wbds_disable_auto_restore() {
+  local temporary
+  wbds_ensure_state_root
+  temporary="${WBDS_AUTO_RESTORE_DISABLED}.tmp.$$"
+  : > "$temporary"
+  /bin/chmod 600 "$temporary"
+  /bin/mv "$temporary" "$WBDS_AUTO_RESTORE_DISABLED"
+  /bin/launchctl unsetenv WORKBUDDY_REMOTE_DEBUGGING_PORT >/dev/null 2>&1 || true
+}
+
+wbds_acquire_operation_lock() {
+  local owner command
+  wbds_ensure_state_root
+  if /bin/mkdir "$WBDS_OPERATION_LOCK" >/dev/null 2>&1; then
+    /usr/bin/printf '%s\n' "$$" > "$WBDS_OPERATION_LOCK/pid"
+    /bin/chmod 700 "$WBDS_OPERATION_LOCK"
+    /bin/chmod 600 "$WBDS_OPERATION_LOCK/pid"
+    return 0
+  fi
+  [[ -d "$WBDS_OPERATION_LOCK" && ! -L "$WBDS_OPERATION_LOCK" ]] || return 1
+  owner="$(/usr/bin/tr -d '[:space:]' < "$WBDS_OPERATION_LOCK/pid" 2>/dev/null || true)"
+  if [[ "$owner" =~ ^[0-9]+$ ]] && /bin/kill -0 "$owner" >/dev/null 2>&1; then
+    command="$(/bin/ps -p "$owner" -o command= 2>/dev/null || true)"
+    [[ "$command" != *"$WBDS_ROOT/scripts/"* ]] || return 1
+  fi
+  /bin/rm -f "$WBDS_OPERATION_LOCK/pid"
+  /bin/rmdir "$WBDS_OPERATION_LOCK" >/dev/null 2>&1 || return 1
+  /bin/mkdir "$WBDS_OPERATION_LOCK" >/dev/null 2>&1 || return 1
+  /usr/bin/printf '%s\n' "$$" > "$WBDS_OPERATION_LOCK/pid"
+  /bin/chmod 700 "$WBDS_OPERATION_LOCK"
+  /bin/chmod 600 "$WBDS_OPERATION_LOCK/pid"
+}
+
+wbds_release_operation_lock() {
+  local owner
+  [[ -d "$WBDS_OPERATION_LOCK" && ! -L "$WBDS_OPERATION_LOCK" ]] || return 0
+  owner="$(/usr/bin/tr -d '[:space:]' < "$WBDS_OPERATION_LOCK/pid" 2>/dev/null || true)"
+  [[ "$owner" == "$$" ]] || return 0
+  /bin/rm -f "$WBDS_OPERATION_LOCK/pid"
+  /bin/rmdir "$WBDS_OPERATION_LOCK" >/dev/null 2>&1 || true
 }
 
 wbds_wait_for_cdp() {
@@ -146,12 +227,122 @@ wbds_read_state() {
 
 wbds_job_remove() {
   /bin/launchctl remove "$1" >/dev/null 2>&1 || true
+  case "$1" in
+    "$WBDS_APP_LABEL") /bin/rm -f "$WBDS_APP_JOB_PLIST" ;;
+    "$WBDS_INJECTOR_LABEL") /bin/rm -f "$WBDS_INJECTOR_JOB_PLIST" ;;
+  esac
 }
 
 wbds_job_pid() {
   /bin/launchctl print "gui/$(/usr/bin/id -u)/$1" 2>/dev/null |
     /usr/bin/sed -n 's/^[[:space:]]*pid = \([0-9][0-9]*\)$/\1/p' |
     /usr/bin/head -n 1
+}
+
+wbds_write_oneshot_job() {
+  local label="$1" plist="$2"
+  shift 2
+  (( $# > 0 )) || wbds_die "创建一次性后台任务时缺少命令。"
+  local temporary="${plist}.tmp.$$" index=0 argument
+  /bin/rm -f "$temporary"
+  /usr/bin/plutil -create xml1 "$temporary"
+  /usr/bin/plutil -insert Label -string "$label" "$temporary"
+  /usr/bin/plutil -insert ProgramArguments -array "$temporary"
+  for argument in "$@"; do
+    /usr/bin/plutil -insert "ProgramArguments.${index}" -string "$argument" "$temporary"
+    index=$((index + 1))
+  done
+  /usr/bin/plutil -insert RunAtLoad -bool true "$temporary"
+  /usr/bin/plutil -insert KeepAlive -bool false "$temporary"
+  /usr/bin/plutil -insert ProcessType -string Interactive "$temporary"
+  /usr/bin/plutil -insert StandardOutPath -string /dev/null "$temporary"
+  /usr/bin/plutil -insert StandardErrorPath -string /dev/null "$temporary"
+  /usr/bin/plutil -lint "$temporary" >/dev/null
+  /bin/chmod 600 "$temporary"
+  /bin/mv "$temporary" "$plist"
+}
+
+wbds_launch_once() {
+  local label="$1" plist="$2" deadline
+  shift 2
+  wbds_write_oneshot_job "$label" "$plist" "$@"
+  /bin/launchctl bootstrap "gui/$(/usr/bin/id -u)" "$plist"
+  WBDS_LAST_SPAWN_PID=""
+  deadline=$((SECONDS + 5))
+  while (( SECONDS < deadline )); do
+    WBDS_LAST_SPAWN_PID="$(wbds_job_pid "$label" || true)"
+    [[ "$WBDS_LAST_SPAWN_PID" =~ ^[0-9]+$ ]] && return 0
+    /bin/sleep 0.05
+  done
+  wbds_job_remove "$label"
+  wbds_die "一次性后台任务未能启动：$label"
+}
+
+wbds_command_matches_role() {
+  local command="$1" role="$2"
+  local themed_app="$WBDS_EXECUTABLE --remote-debugging-address=127.0.0.1"
+  case "$role" in
+    app)
+      [[ "$command" == "$themed_app" || "$command" == "$themed_app --"* ]]
+      ;;
+    workbuddy-main)
+      [[ "$command" == "$WBDS_EXECUTABLE" ||
+        "$command" == "$themed_app" || "$command" == "$themed_app --"* ]]
+      ;;
+    injector)
+      [[ "$command" == "$WBDS_EXECUTABLE $WBDS_ROOT/scripts/injector.mjs --port "* &&
+        "$command" == *" --watch --theme "* ]]
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+wbds_pid_matches_role() {
+  local pid="$1" role="$2" command
+  [[ "$pid" =~ ^[0-9]+$ ]] || return 1
+  command="$(/bin/ps -p "$pid" -o command= 2>/dev/null || true)"
+  wbds_command_matches_role "$command" "$role"
+}
+
+wbds_stop_owned_pid() {
+  local pid="$1" role="$2" label="$3"
+  [[ "$pid" =~ ^[0-9]+$ ]] || return 0
+  /bin/kill -0 "$pid" >/dev/null 2>&1 || return 0
+  if ! wbds_pid_matches_role "$pid" "$role"; then
+    wbds_info "忽略不属于当前皮肤会话的 ${label} PID=${pid}。"
+    return 0
+  fi
+  /bin/kill -TERM "$pid" >/dev/null 2>&1 || return 1
+  for _ in {1..50}; do
+    /bin/kill -0 "$pid" >/dev/null 2>&1 || return 0
+    /bin/sleep 0.1
+  done
+  return 1
+}
+
+wbds_stop_all_owned_role() {
+  local role="$1" label="$2" pid failed=0
+  while read -r pid; do
+    [[ -n "$pid" ]] || continue
+    if wbds_pid_matches_role "$pid" "$role"; then
+      wbds_stop_owned_pid "$pid" "$role" "$label" || failed=1
+    fi
+  done < <(/bin/ps -axo pid=)
+  (( failed == 0 ))
+}
+
+wbds_stop_recorded_injector() {
+  local pid
+  pid="$(/usr/bin/plutil -extract pid raw -o - "$WBDS_INJECTOR_STATE" 2>/dev/null || true)"
+  wbds_stop_owned_pid "$pid" injector "注入器"
+}
+
+wbds_stop_recorded_app() {
+  local pid
+  pid="$(wbds_read_state appPid || true)"
+  wbds_stop_owned_pid "$pid" workbuddy-main "WorkBuddy"
 }
 
 wbds_node() {

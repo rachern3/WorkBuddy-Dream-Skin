@@ -4,7 +4,11 @@ import Foundation
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
   private var statusItem: NSStatusItem!
   private var operationCount = 0
+  private var autoRestoreInFlight = false
+  private var autoRestoreRequested = false
+  private var autoRestoreWorkItem: DispatchWorkItem?
   private let fileManager = FileManager.default
+  private let workBuddyBundleIdentifier = "com.workbuddy.workbuddy"
 
   private var engineRoot: URL {
     fileManager.homeDirectoryForCurrentUser.appendingPathComponent(".workbuddy-dream-skin/studio", isDirectory: true)
@@ -30,10 +34,58 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     menu.delegate = self
     statusItem.menu = menu
     rebuildMenu(menu)
+
+    NSWorkspace.shared.notificationCenter.addObserver(
+      self,
+      selector: #selector(workBuddyDidLaunch(_:)),
+      name: NSWorkspace.didLaunchApplicationNotification,
+      object: nil
+    )
+    scheduleAutoRestore(after: 0.2)
+  }
+
+  func applicationWillTerminate(_ notification: Notification) {
+    autoRestoreWorkItem?.cancel()
+    NSWorkspace.shared.notificationCenter.removeObserver(self)
   }
 
   func menuWillOpen(_ menu: NSMenu) {
     rebuildMenu(menu)
+  }
+
+  @objc private func workBuddyDidLaunch(_ notification: Notification) {
+    guard let application = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+          application.bundleIdentifier == workBuddyBundleIdentifier else { return }
+    scheduleAutoRestore(after: 0.75)
+  }
+
+  private func scheduleAutoRestore(after delay: TimeInterval) {
+    autoRestoreWorkItem?.cancel()
+    let workItem = DispatchWorkItem { [weak self] in self?.runAutoRestore() }
+    autoRestoreWorkItem = workItem
+    DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
+  }
+
+  private func runAutoRestore() {
+    if autoRestoreInFlight {
+      autoRestoreRequested = true
+      return
+    }
+    let script = engineRoot.appendingPathComponent("scripts/auto-attach-workbuddy-dream-skin-macos.sh")
+    guard fileManager.isExecutableFile(atPath: script.path) else { return }
+
+    autoRestoreInFlight = true
+    ScriptRunner.run(script: script) { [weak self] result in
+      guard let self else { return }
+      self.autoRestoreInFlight = false
+      if !result.succeeded {
+        NSLog("WorkBuddy Dream Skin automatic restore failed: %@", result.output)
+      }
+      if self.autoRestoreRequested {
+        self.autoRestoreRequested = false
+        self.scheduleAutoRestore(after: 0.5)
+      }
+    }
   }
 
   private func rebuildMenu(_ menu: NSMenu) {
@@ -78,8 +130,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     menu.addItem(item("验证运行状态", action: #selector(verifySkin)))
     menu.addItem(item("打开背景目录", action: #selector(openThemesFolder)))
     menu.addItem(item("恢复 WorkBuddy 官方外观…", action: #selector(restoreOfficialAppearance)))
-    menu.addItem(.separator())
-    menu.addItem(item("退出菜单栏工具", action: #selector(quit), key: "q"))
   }
 
   private func item(_ title: String, action: Selector, key: String = "") -> NSMenuItem {
@@ -124,10 +174,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
   @objc private func openThemesFolder() {
     try? fileManager.createDirectory(at: themesDirectory, withIntermediateDirectories: true)
     NSWorkspace.shared.open(themesDirectory)
-  }
-
-  @objc private func quit() {
-    NSApplication.shared.terminate(nil)
   }
 
   private func run(_ name: String, arguments: [String] = [], description: String, showSuccess: Bool = false) {
